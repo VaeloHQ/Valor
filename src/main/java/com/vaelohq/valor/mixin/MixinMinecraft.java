@@ -1,6 +1,7 @@
 package com.vaelohq.valor.mixin;
 
 import com.vaelohq.valor.Valor;
+import com.vaelohq.valor.ui.ValorScreen;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,5 +39,12 @@ public abstract class MixinMinecraft {
         } catch (Exception e) {
             Valor.LOGGER.error("Couldn't set Valor icon", e);
         }
+    }
+
+    // Vanilla caps menus at 30 FPS; Valor screens animate, so allow up to 60 (never above the player's own limit).
+    @Inject(method = "getLimitFramerate", at = @At("HEAD"), cancellable = true)
+    private void valor$menuFps(CallbackInfoReturnable<Integer> cir) {
+        Minecraft mc = (Minecraft) (Object) this;
+        if (mc.theWorld == null && mc.currentScreen instanceof ValorScreen) cir.setReturnValue(Math.min(mc.gameSettings.limitFramerate, 60));
     }
 }

@@ -1,89 +1,123 @@
 package com.vaelohq.valor.ui;
 
-import com.vaelohq.valor.Valor;
+import com.vaelohq.valor.Recent;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiLanguage;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiSelectWorld;
-import net.minecraftforge.fml.client.GuiModList;
+import net.minecraft.client.gui.GuiWinGame;
+import net.minecraft.client.multiplayer.GuiConnecting;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import org.lwjgl.input.Keyboard;
 
-/** Big-type main menu: Multiplayer leads bottom-left, the player's 3D skin stands right of centre. */
+import java.util.Calendar;
+
+/** Main menu: 3D head, greeting, title, action pills, Continue card and an icon dock. */
 public class MainMenuScreen extends ValorScreen {
-    private static final String[] ROW = {"Settings", "Mods", "Client", "Quit"};
-    private int sel, lastMouseX = -1, lastMouseY = -1;
+    private static final int MULTI = 0, SINGLE = 1, ACCOUNT = 2, CONTINUE = 3, SETTINGS = 4, MODS = 5, SOON_A = 6, SOON_B = 7,
+            QUIT = 8, LANGUAGE = 9, CREDITS = 10;
+    private Widgets.Card card;
+    private int focus = -1;
+    private float top;
 
     @Override
     public void initGui() {
         super.initGui();
-        long t = opened + 200;
-        buttonList.add(new ValorButton(0, 19, height - 70, "Multiplayer", Ui.display(), 15, Ui.TEXT, null, t));
-        buttonList.add(new ValorButton(1, 19, height - 48, "Singleplayer", Ui.regular(), 8.5f, Ui.mix(Ui.TEXT, Ui.MUTED, 0.35f), null, t + 60));
-        int x = 19;
-        for (int i = 0; i < ROW.length; i++) {
-            ValorButton b = new ValorButton(2 + i, x, height - 31, ROW[i], Ui.regular(), 6,
-                    i == 3 ? Ui.MUTED : Ui.mix(Ui.TEXT, Ui.MUTED, 0.35f), i == 2 ? "Soon" : null, t + 120);
-            buttonList.add(b);
-            x += b.width + 9;
+        Recent.load();
+        float cx = width / 2f, dockH = 19;
+        top = Math.max(6, (height - dockH - 12 - 134) / 2);
+        float py = top + 89, rowW = 186, x = cx - rowW / 2;
+        long t = opened + 180;
+        buttonList.add(new Widgets.Pill(MULTI, x, py, 66, 15, 7.5f, Ui.I_SERVER, "Multiplayer", true, t));
+        buttonList.add(new Widgets.Pill(SINGLE, x + 71, py, 64, 15, 7.5f, Ui.I_PLAY, "Singleplayer", false, t + 40));
+        buttonList.add(new Widgets.Pill(ACCOUNT, x + 140, py, 46, 15, 7.5f, Ui.I_USER, "Account", false, t + 80));
+        card = new Widgets.Card(CONTINUE, x, py + 21, rowW, 24, t + 130);
+        buttonList.add(card);
+
+        float s = 15, gap = 2, dw = 5 * s + 4 * gap + 9, dx = cx - dw / 2 + 2, dy = height - dockH - 8 + 2;
+        int[] icons = {Ui.I_SETTINGS, Ui.I_GRID, Ui.I_PLACEHOLDER, Ui.I_PLACEHOLDER, Ui.I_POWER};
+        String[] labels = {"Settings", "Mods menu", "Coming soon", "Coming soon", "Quit game"};
+        for (int i = 0; i < 5; i++) {
+            float ix = dx + i * (s + gap) + (i == 4 ? 5 : 0);
+            buttonList.add(new Widgets.DockIcon(SETTINGS + i, ix, dy, s, icons[i], labels[i], i == 2 || i == 3, t + 200));
         }
+        float lx = width - 12;
+        for (String[] l : new String[][]{{"Credits", "" + CREDITS}, {"Language", "" + LANGUAGE}}) {
+            lx -= Ui.regular().width(l[0], 5.5f);
+            buttonList.add(new Widgets.Link(Integer.parseInt(l[1]), lx, height - 15, l[0], 5.5f, Ui.MUTED, t + 200));
+            lx -= 12;
+        }
+    }
+
+    private static String greeting(String name) {
+        int h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        return (h >= 5 && h < 12 ? "Good morning, " : h >= 12 && h < 18 ? "Good afternoon, " : "Good night, ") + name;
     }
 
     @Override
     protected void drawContent(int mouseX, int mouseY) {
-        if (mouseX != lastMouseX || mouseY != lastMouseY) {
-            for (GuiButton b : buttonList)
-                if (mouseX >= b.xPosition && mouseY >= b.yPosition && mouseX < b.xPosition + b.width && mouseY < b.yPosition + b.height) sel = b.id;
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
-        }
-        float a = Ui.ease(time() / 0.5f);
+        float cx = width / 2f, a = Ui.ease(time() / 0.5f), rise = (1 - a) * 6;
 
-        Ui.logo(17, 13, 14, a);
-        Ui.semibold().draw("Valor", 35, 15.5f, 9.5f, Ui.alpha(Ui.TEXT, a));
+        float head = 30, hy = top + head / 2 + rise;
+        float yaw = Math.max(-1, Math.min(1, (mouseX - cx) / (width * 0.5f))) * 22;
+        float pitch = Math.max(-1, Math.min(1, (mouseY - hy) / (height * 0.5f))) * 14;
+        Shapes.draw(cx - head * 0.4f, hy + head * 0.6f, head * 0.8f, 1, 0.5f, 0, 0, 0, 0, Ui.alpha(0x8C000000, a), head * 0.12f, 0);
+        SkinPreview.head(cx, hy, head, yaw, pitch);
 
-        ValorFont f = Ui.regular();
-        String name = mc.getSession().getUsername(), kind = "0".equals(mc.getSession().getToken()) ? "Offline account" : "Minecraft account";
-        float tw = Math.max(f.width(name, 5.4f), f.width(kind, 4.8f)), ax = width - 15 - tw;
-        SkinPreview.face((int) (ax - 13), 14, 10);
-        f.draw(name, ax, 14, 5.4f, Ui.alpha(Ui.TEXT, a));
-        f.draw(kind, ax, 20.5f, 4.8f, Ui.alpha(Ui.MUTED, a));
+        Ui.bold().draw3D(greeting(mc.getSession().getUsername()), cx, top + 38 + rise, 9.5f, Ui.TEXT, 0xFFC4D8FF, 0xFF2D5BFF,
+                0xFF0B1A5C, a);
+        ValorFont b = Ui.bold();
+        float tw = b.width("Valor", 24);
+        b.draw("Valor", cx - tw / 2, top + 55 + rise, 24, Ui.alpha(0xFFFFFFFF, a), Ui.alpha(0xFF8DB2FF, a));
 
-        float px = height / 62f, sx = width * 0.72f, feet = height - 52;
-        Ui.glow(sx, feet + px * 0.4f, px * 10, px * 2.2f, Ui.alpha(0xFF000000, 0.6f * a));
-        float yaw = -28 + Math.max(-1, Math.min(1, (mouseX - sx) / (width * 0.5f))) * 14;
-        SkinPreview.draw(sx, feet, px, yaw, time());
+        card.empty = !Recent.has() || Recent.name.isEmpty();
+        card.title = card.empty ? "No recent server" : Recent.name;
+        card.sub = Recent.has() ? "Continue  ·  " + Recent.ago() : "Join a server to pick up here next time";
 
-        for (GuiButton b : buttonList) ((ValorButton) b).selected = b.id == sel;
-        ValorButton s = (ValorButton) buttonList.get(sel);
-        Ui.circle(13, s.midY(), 2.6f, Ui.alpha(Ui.CYAN, 0.18f * a));
-        Ui.circle(13, s.midY(), 1.1f, Ui.alpha(Ui.CYAN, a));
+        float dw = 5 * 15 + 4 * 2 + 9 + 8, dy = height - 19 - 8;
+        Shapes.draw(cx - dw / 2, dy, dw, 19, 9.5f, Ui.alpha(0xD0141A2E, a), Ui.alpha(0xD00A0E1C, a), Ui.alpha(0x24FFFFFF, a), 0.5f,
+                Ui.alpha(0x99000000, a), 7, 3);
+        float divX = cx - dw / 2 + 4 + 4 * 17 + 2;
+        Ui.rect(divX, dy + 5, divX + 0.5f, dy + 14, Ui.alpha(0x30FFFFFF, a));
 
-        f.draw("Valor " + Valor.VERSION + "  ·  Minecraft 1.8.9", 10, height - 11, 5, Ui.alpha(Ui.MUTED, a * 0.85f));
-        String c = "Copyright Mojang AB. Do not distribute!";
-        f.draw(c, width - f.width(c, 5) - 10, height - 11, 5, Ui.alpha(Ui.MUTED, a * 0.85f));
+        Ui.regular().draw("Valor", 12, height - 15, 5.5f, Ui.alpha(Ui.MUTED, a));
+        for (GuiButton btn : buttonList) ((Widgets.Base) btn).focused = btn.id == focus;
     }
 
     @Override
     protected void actionPerformed(GuiButton b) {
         switch (b.id) {
-            case 0: mc.displayGuiScreen(new GuiMultiplayer(this)); break;
-            case 1: mc.displayGuiScreen(new GuiSelectWorld(this)); break;
-            case 2: mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings)); break;
-            case 3: mc.displayGuiScreen(new GuiModList(this)); break;
-            case 4: toast("Coming soon"); break;
-            case 5: mc.shutdown(); break;
+            case MULTI: mc.displayGuiScreen(new GuiMultiplayer(this)); break;
+            case SINGLE: mc.displayGuiScreen(new GuiSelectWorld(this)); break;
+            case ACCOUNT: mc.displayGuiScreen(new AccountScreen(this, false)); break;
+            case CONTINUE: resume(); break;
+            case SETTINGS: mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings)); break;
+            case MODS:
+            case SOON_A:
+            case SOON_B: toast("Coming soon"); break;
+            case QUIT: mc.shutdown(); break;
+            case LANGUAGE: mc.displayGuiScreen(new GuiLanguage(this, mc.gameSettings, mc.getLanguageManager())); break;
+            case CREDITS: mc.displayGuiScreen(new GuiWinGame()); break;
         }
+    }
+
+    private void resume() {
+        if (!Recent.has()) mc.displayGuiScreen(new GuiMultiplayer(this));
+        else if (Recent.world) FMLClientHandler.instance().tryLoadExistingWorld(new GuiSelectWorld(this), Recent.target, Recent.name);
+        else mc.displayGuiScreen(new GuiConnecting(this, mc, new ServerData(Recent.name, Recent.target, false)));
     }
 
     @Override
     protected void keyTyped(char c, int key) {
         int n = buttonList.size();
-        if (key == Keyboard.KEY_UP || key == Keyboard.KEY_LEFT) sel = (sel + n - 1) % n;
-        else if (key == Keyboard.KEY_DOWN || key == Keyboard.KEY_RIGHT || key == Keyboard.KEY_TAB) sel = (sel + 1) % n;
-        else if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-            GuiButton b = buttonList.get(sel);
+        if (key == Keyboard.KEY_TAB || key == Keyboard.KEY_RIGHT || key == Keyboard.KEY_DOWN) focus = (focus + 1) % n;
+        else if (key == Keyboard.KEY_LEFT || key == Keyboard.KEY_UP) focus = (focus + n - 1) % n;
+        else if ((key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) && focus >= 0) {
+            GuiButton b = buttonList.get(focus);
             b.playPressSound(mc.getSoundHandler());
             actionPerformed(b);
-        } else if (key == Keyboard.KEY_RSHIFT) toast("Coming soon");
+        } else if (key == Keyboard.KEY_RSHIFT) toast("Mods menu coming soon");
     }
 }

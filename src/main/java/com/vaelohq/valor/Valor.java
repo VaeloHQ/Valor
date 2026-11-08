@@ -5,6 +5,7 @@ import com.vaelohq.valor.ui.MainMenuScreen;
 import com.vaelohq.valor.ui.Ui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -12,6 +13,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.lang.ref.WeakReference;
 
 @Mod(modid = Valor.MODID, version = Valor.VERSION, useMetadata = true, clientSideOnly = true)
 public class Valor {
@@ -21,6 +24,7 @@ public class Valor {
 
     public static final Logger LOGGER = LogManager.getLogger(NAME);
     private boolean introShown;
+    private WeakReference<WorldClient> recorded = new WeakReference<>(null);
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
@@ -30,11 +34,20 @@ public class Valor {
 
     @SubscribeEvent
     public void onGuiOpen(GuiOpenEvent e) {
+        Minecraft mc = Minecraft.getMinecraft();
         if (e.gui instanceof GuiMainMenu) {
+            // First title screen of the launch: intro, then the account panel, then the menu.
             e.gui = introShown ? new MainMenuScreen() : new IntroScreen();
             introShown = true;
-        } else if (e.gui == null && Minecraft.getMinecraft().theWorld != null) {
-            Ui.release(); // back in game: menu fonts, logo and shader cost nothing while playing
+        } else if (e.gui == null && mc.theWorld != null) {
+            Ui.release(); // back in game: menu fonts, textures and shaders cost nothing while playing
+            if (mc.theWorld != recorded.get()) {
+                recorded = new WeakReference<>(mc.theWorld);
+                if (mc.isSingleplayer() && mc.getIntegratedServer() != null)
+                    Recent.save(mc.getIntegratedServer().getWorldName(), mc.getIntegratedServer().getFolderName(), true);
+                else if (mc.getCurrentServerData() != null)
+                    Recent.save(mc.getCurrentServerData().serverName, mc.getCurrentServerData().serverIP, false);
+            }
         }
     }
 }

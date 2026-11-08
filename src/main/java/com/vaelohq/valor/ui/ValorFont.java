@@ -61,33 +61,55 @@ public final class ValorFont {
 
     /** Draws s with its top-left at (x, y); size is the font size in GUI pixels. */
     public void draw(String s, float x, float y, float size, int argb) {
-        float k = size / res, c = cell * k, uv = (float) cell / ATLAS;
-        Ui.color(argb);
+        draw(s, x, y, size, argb, argb);
+    }
+
+    /** Same as draw, with a left-to-right colour gradient across the whole string. */
+    public void draw(String s, float x, float y, float size, int left, int right) {
+        float k = size / res, c = cell * k, uv = (float) cell / ATLAS, x0 = x, w = Math.max(width(s, size), 0.001f);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GlStateManager.disableAlpha();
         GlStateManager.enableTexture2D();
+        GlStateManager.shadeModel(GL11.GL_SMOOTH);
+        GlStateManager.color(1, 1, 1, 1);
         GlStateManager.bindTexture(tex);
         WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();
-        wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
         x -= pad * k;
         y -= pad * k;
         for (int i = 0; i < s.length(); i++) {
             int ch = glyph(s.charAt(i)), n = ch - 32;
             float u = (n % cols) * uv, v = (n / cols) * uv;
-            wr.pos(x, y + c, 0).tex(u, v + uv).endVertex();
-            wr.pos(x + c, y + c, 0).tex(u + uv, v + uv).endVertex();
-            wr.pos(x + c, y, 0).tex(u + uv, v).endVertex();
-            wr.pos(x, y, 0).tex(u, v).endVertex();
+            int cl = Ui.mix(left, right, Ui.clamp((x - x0) / w)), cr = Ui.mix(left, right, Ui.clamp((x + c - x0) / w));
+            vert(wr, x, y + c, u, v + uv, cl);
+            vert(wr, x + c, y + c, u + uv, v + uv, cr);
+            vert(wr, x + c, y, u + uv, v, cr);
+            vert(wr, x, y, u, v, cl);
             x += adv[ch] * k;
         }
         Tessellator.getInstance().draw();
+        GlStateManager.shadeModel(GL11.GL_FLAT);
         GlStateManager.enableAlpha();
-        GlStateManager.color(1, 1, 1, 1);
+    }
+
+    private static void vert(WorldRenderer wr, float x, float y, float u, float v, int argb) {
+        wr.pos(x, y, 0).tex(u, v).color(argb >> 16 & 255, argb >> 8 & 255, argb & 255, argb >>> 24).endVertex();
     }
 
     public void drawCentered(String s, float cx, float y, float size, int argb) {
-        draw(s, cx - width(s, size) / 2, y, size, argb);
+        draw(s, cx - width(s, size) / 2, y, size, argb, argb);
+    }
+
+    /** Extruded "block" text: depth layers stepping down from side to top, then a gradient front face. */
+    public void draw3D(String s, float cx, float y, float size, int top, int topRight, int side, int sideDeep, float alpha) {
+        float x = cx - width(s, size) / 2, step = size / 22f;
+        int layers = 6;
+        for (int i = layers; i >= 1; i--) {
+            int c = Ui.alpha(Ui.mix(side, sideDeep, i / (float) layers), alpha);
+            draw(s, x + i * step * 0.35f, y + i * step, size, c, c);
+        }
+        draw(s, x, y, size, Ui.alpha(top, alpha), Ui.alpha(topRight, alpha));
     }
 
     void delete() {

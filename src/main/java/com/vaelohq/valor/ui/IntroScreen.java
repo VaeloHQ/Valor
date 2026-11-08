@@ -22,7 +22,7 @@ public class IntroScreen extends ValorScreen {
     }
 
     private void enter() {
-        if (time() > 0.4f) mc.displayGuiScreen(new MainMenuScreen());
+        if (time() > 0.4f) mc.displayGuiScreen(new AccountScreen(new MainMenuScreen(), true));
     }
 
     @Override

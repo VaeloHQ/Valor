@@ -7,14 +7,14 @@ related_targets: []
 
 # Main menu surface brief
 
-Scope: Valor main menu (title screen), Operate mode: players pass through it daily to reach Multiplayer servers.
+Scope: Valor main menu, login and sign-up panel. Operate mode: players pass through daily to reach servers.
 
 ## Direction contract
 
-THESIS: The menu is the shortest path into a server. It refuses the category default of a centred column of equal buttons over a busy background.
-OWN-WORLD: Near-black navy (#060A1E) with faint blue light ribbons and sparse stars at the edges; Inter only; text-only controls; cyan (#00E5FF) marks selection and nothing else; the folded V logo.
-STORY: The player sees who they are (account, 3D skin), sees Multiplayer as the obvious action, and is one key or click from a server list.
-FIRST VIEWPORT: Logo and wordmark top-left, account chip top-right, the player's 3D skin standing right of centre, "Multiplayer" set very large bottom-left with "Singleplayer" under it and one small row (Settings, Mods, Client, Quit) beneath; version and copyright in the bottom corners.
-FORM: Big-type anchored menu, structure 6 of 7 on the ranked list, dealt by the roll. seed: none (unavailable)
-SIGNATURE: Keyboard-first selection (arrows plus Enter) with a cyan dot that follows the selected item; the skin turns slightly toward the cursor and idles.
+THESIS: A calm, centred launch pad in the GlowDLC style, in Valor blue: who you are, the one obvious action, and one-click Continue. It refuses a list of equal grey buttons.
+OWN-WORLD: Slowly drifting blurred blue light with a faint dot grid; dark glass pills and cards with soft shadows and hairline borders; one filled blue primary; Inter Regular, SemiBold and Bold; Lucide line icons.
+STORY: The player sees their 3D head and a time-of-day greeting, presses Multiplayer or Continue, and is playing.
+FIRST VIEWPORT: Centred stack: 3D skin head, extruded greeting, gradient "Valor" title, pills (Multiplayer filled, Singleplayer, Account), Continue card. Icon dock bottom centre (Settings, Mods menu, two placeholders, Quit), "Valor" bottom-left, Language and Credits bottom-right.
+FORM: Owner-pinned reference (GlowDLC menu, Breeze login), replacing the earlier big-type layout. seed: none (unavailable)
+SIGNATURE: The head turns toward the cursor; pills lift and brighten on hover; dock icons show a label pill above them; Tab and arrows move a cyan focus ring.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

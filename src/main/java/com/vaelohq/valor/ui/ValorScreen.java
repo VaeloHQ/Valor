@@ -2,8 +2,9 @@ package com.vaelohq.valor.ui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 
-/** Base for Valor screens: animated background, fade-in on open, and a small toast. */
+/** Base for Valor screens: animated background, fade-in on open, and a toast pill. */
 public abstract class ValorScreen extends GuiScreen {
     private static String toast;
     private static long toastAt;
@@ -28,19 +29,20 @@ public abstract class ValorScreen extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        Shapes.px = 1f / new ScaledResolution(mc).getScaleFactor();
         drawBackground();
         drawContent(mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
         long age = Minecraft.getSystemTime() - toastAt;
-        if (toast != null && age < 2000) {
-            float a = Ui.clamp((2000 - age) / 300f) * Ui.ease(age / 200f);
-            ValorFont f = Ui.regular();
-            float w = f.width(toast, 9) + 16, x = (width - w) / 2, y = 2 + 6 * Ui.ease(age / 200f);
-            Ui.rect(x, y, x + w, y + 18, Ui.alpha(Ui.PANEL, a * 0.92f));
-            Ui.rect(x, y + 17.5f, x + w, y + 18, Ui.alpha(Ui.CYAN, a));
-            f.drawCentered(toast, width / 2f, y + 4.5f, 9, Ui.alpha(Ui.TEXT, a));
+        if (toast != null && age < 2200) {
+            float a = Ui.clamp((2200 - age) / 300f) * Ui.ease(age / 220f);
+            ValorFont f = Ui.semibold();
+            float w = f.width(toast, 6) + 18, x = (width - w) / 2, y = 8 + 4 * Ui.ease(age / 220f);
+            Shapes.draw(x, y, w, 15, 7.5f, Ui.alpha(Ui.SURFACE_HI, a), Ui.alpha(Ui.SURFACE_HI, a), Ui.alpha(Ui.BORDER, a), 0.5f,
+                    Ui.alpha(0x99000000, a), 5, 2);
+            f.drawCentered(toast, width / 2f, y + 4.2f, 6, Ui.alpha(Ui.TEXT, a));
         }
-        float fade = 1 - Ui.ease(time() / 0.4f);
+        float fade = 1 - Ui.ease(time() / 0.35f);
         if (fade > 0) Ui.rect(0, 0, width, height, Ui.alpha(0xFF000000, fade));
     }
 
