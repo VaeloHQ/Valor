@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "${modid}",
+    "name": "Valor",
+    "description": "Valor Client for Minecraft 1.8.9.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/VaeloHQ/Valor",
+    "updateUrl": "",
+    "authorList": [
+      "VaeloHQ"
+    ],
+    "credits": "",
+    "logoFile": "valor-logo.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
