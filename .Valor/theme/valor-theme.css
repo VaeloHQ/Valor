@@ -1,0 +1,20 @@
+:root {
+  --valor-primary: #0A4DFF;
+  --valor-azure: #00B4FF;
+  --valor-cyan: #00E5FF;
+  --valor-navy: #02021A;
+  --valor-bg: #060A1E;
+  --valor-panel: #0A1033;
+  --valor-text: #EAF4FF;
+  --valor-text-muted: #8FA6D6;
+  --valor-gradient: linear-gradient(135deg, #0A4DFF 0%, #00B4FF 60%, #00E5FF 100%);
+  --valor-glow: 0 0 12px rgba(0, 180, 255, 0.55);
+  --valor-radius: 8px;
+}
+.valor-panel {
+  background: linear-gradient(180deg, var(--valor-panel), var(--valor-bg));
+  border: 1px solid rgba(10, 77, 255, 0.6);
+  border-radius: var(--valor-radius);
+  color: var(--valor-text);
+  box-shadow: var(--valor-glow);
+}

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Valor">
+  <defs>
+    <linearGradient id="armL" x1="135" y1="352" x2="700" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A4DFF"/>
+      <stop offset="0.35" stop-color="#0A5CFF"/>
+      <stop offset="0.7" stop-color="#0A4DFF"/>
+      <stop offset="1" stop-color="#0038C8"/>
+    </linearGradient>
+    <linearGradient id="armR" x1="1120" y1="352" x2="640" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00D4FF"/>
+      <stop offset="0.4" stop-color="#0A6CFF"/>
+      <stop offset="1" stop-color="#0A8CFF"/>
+    </linearGradient>
+    <linearGradient id="foldL" x1="330" y1="480" x2="560" y2="830" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1F8A"/>
+      <stop offset="0.5" stop-color="#0A35D0"/>
+      <stop offset="1" stop-color="#0A48F5"/>
+    </linearGradient>
+    <linearGradient id="foldR" x1="800" y1="520" x2="880" y2="780" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1F8A"/>
+      <stop offset="0.6" stop-color="#0B1F8A"/>
+      <stop offset="1" stop-color="#0A4DFF"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="135" y1="352" x2="630" y2="970" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A4DFF" stop-opacity="0"/>
+      <stop offset="1" stop-color="#00E5FF"/>
+    </linearGradient>
+  
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A1033"/>
+      <stop offset="1" stop-color="#060A1E"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#tile)"/>
+  <g transform="translate(-16 -24) scale(0.23) translate(0 0)">
+  <!-- left arm -->
+  <path d="M135 352H365C430 352 478 386 506 436L700 790L630 970Z" fill="url(#armL)"/>
+  <path d="M240 478H380C432 478 468 506 498 550L692 802L630 970Z" fill="url(#foldL)"/>
+  <!-- right arm -->
+  <path d="M1120 352H895C830 352 785 386 756 436L628 657L700 790L628 970Z" fill="url(#armR)"/>
+  <path d="M628 657L756 458C800 424 880 462 1030 463C960 465 905 488 862 548L700 790Z" fill="url(#foldR)"/>
+  <!-- cyan edge light on outer edges -->
+  <path d="M135 352L630 970" stroke="url(#edge)" stroke-width="5" fill="none"/>
+  <path d="M1120 352L628 970" stroke="#00D4FF" stroke-opacity="0.8" stroke-width="4" fill="none"/>
+
+</g>
+</svg>
