@@ -5,7 +5,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = Valor.MODID, useMetadata = true, clientSideOnly = true)
+@Mod(modid = Valor.MODID, version = Valor.VERSION, useMetadata = true, clientSideOnly = true)
 public class Valor {
     public static final String MODID = "valor";
     public static final String NAME = "Valor";
