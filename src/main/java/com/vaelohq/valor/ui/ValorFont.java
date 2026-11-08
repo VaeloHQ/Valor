@@ -14,15 +14,20 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
-/** Smooth TTF text: glyphs 32-255 baked once into a 1024x1024 atlas, drawn as linear-filtered quads. */
+/** Smooth TTF text: glyphs 32..last baked once into a 1024x1024 atlas, drawn as linear-filtered quads. */
 public final class ValorFont {
-    private static final int RES = 48, CELL = 64, PAD = 6, ATLAS = 1024;
+    private static final int ATLAS = 1024;
+    private final int res, cell, pad, last, cols, tex;
     private final float[] adv = new float[256];
-    private final int tex;
 
-    ValorFont(String file) {
+    ValorFont(String file, int res, int cell, int pad, int last) {
+        this.res = res;
+        this.cell = cell;
+        this.pad = pad;
+        this.last = last;
+        this.cols = ATLAS / cell;
         try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, ValorFont.class.getResourceAsStream("/assets/valor/font/" + file)).deriveFont((float) RES);
+            Font font = Font.createFont(Font.TRUETYPE_FONT, ValorFont.class.getResourceAsStream("/assets/valor/font/" + file)).deriveFont((float) res);
             BufferedImage img = new BufferedImage(ATLAS, ATLAS, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = img.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -30,29 +35,33 @@ public final class ValorFont {
             g.setFont(font);
             g.setColor(Color.WHITE);
             FontMetrics fm = g.getFontMetrics();
-            for (int c = 32; c < 256; c++) {
+            for (int c = 32; c <= last; c++) {
                 if (!font.canDisplay(c)) continue;
                 String s = String.valueOf((char) c);
-                g.drawString(s, (c % 16) * CELL + PAD, (c / 16) * CELL + PAD + fm.getAscent());
+                int i = c - 32;
+                g.drawString(s, (i % cols) * cell + pad, (i / cols) * cell + pad + fm.getAscent());
                 adv[c] = (float) font.getStringBounds(s, g.getFontRenderContext()).getWidth();
             }
             g.dispose();
-            tex = TextureUtil.glGenTextures();
-            TextureUtil.uploadTextureImageAllocate(tex, img, true, true);
+            tex = Ui.texture(img);
         } catch (Exception e) {
             throw new RuntimeException("Couldn't load font " + file, e);
         }
     }
 
+    private int glyph(char c) {
+        return c >= 32 && c <= last ? c : '?';
+    }
+
     public float width(String s, float size) {
         float w = 0;
-        for (int i = 0; i < s.length(); i++) w += adv[s.charAt(i) & 0xFF];
-        return w * size / RES;
+        for (int i = 0; i < s.length(); i++) w += adv[glyph(s.charAt(i))];
+        return w * size / res;
     }
 
     /** Draws s with its top-left at (x, y); size is the font size in GUI pixels. */
     public void draw(String s, float x, float y, float size, int argb) {
-        float k = size / RES, c = CELL * k, uv = (float) CELL / ATLAS;
+        float k = size / res, c = cell * k, uv = (float) cell / ATLAS;
         Ui.color(argb);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -61,11 +70,11 @@ public final class ValorFont {
         GlStateManager.bindTexture(tex);
         WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();
         wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        x -= PAD * k;
-        y -= PAD * k;
+        x -= pad * k;
+        y -= pad * k;
         for (int i = 0; i < s.length(); i++) {
-            int ch = s.charAt(i) & 0xFF;
-            float u = (ch % 16) * uv, v = (ch / 16) * uv;
+            int ch = glyph(s.charAt(i)), n = ch - 32;
+            float u = (n % cols) * uv, v = (n / cols) * uv;
             wr.pos(x, y + c, 0).tex(u, v + uv).endVertex();
             wr.pos(x + c, y + c, 0).tex(u + uv, v + uv).endVertex();
             wr.pos(x + c, y, 0).tex(u + uv, v).endVertex();

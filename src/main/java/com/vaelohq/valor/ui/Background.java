@@ -13,15 +13,15 @@ final class Background {
             + "float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n"
             + "void main(){\n"
             + " vec2 uv=gl_FragCoord.xy/res; float ar=res.x/res.y; vec2 p=vec2(uv.x*ar,uv.y);\n"
-            + " vec3 c=mix(vec3(.016,.024,.07),vec3(.03,.05,.16),uv.y*.8);\n"
+            + " vec3 c=mix(vec3(.012,.018,.055),vec3(.03,.045,.13),uv.y);\n"
             + " float w=0.;\n"
-            + " for(int i=0;i<10;i++){float f=float(i), side=i<5?f*.045+.05:ar-.05-(f-5.)*.045;\n"
-            + "  float x=side+.06*sin(p.y*3.+t*.5+f*.9)+.02*sin(p.y*7.-t*.8+f);\n"
-            + "  float d=abs(p.x-x); w+=smoothstep(.035,0.,d)*.10+smoothstep(.004,0.,d)*.35;}\n"
-            + " c+=vec3(.04,.30,1.)*w*.45;\n"
-            + " vec2 g=floor(p*45.), q=fract(p*45.)-.5; float r=h(g);\n"
-            + " if(r>.986) c+=vec3(.55,.85,1.)*smoothstep(.12,0.,length(q))*(.45+.55*sin(t*1.7+r*80.));\n"
-            + " c*=1.-.35*length(uv-.5);\n"
+            + " for(int i=0;i<12;i++){float f=float(i); float side=i<6?f*.035+.02:ar-.02-(f-6.)*.035;\n"
+            + "  float x=side+.07*sin(p.y*2.2+t*.35+f*1.3)+.025*sin(p.y*5.3-t*.6+f*2.1);\n"
+            + "  float d=abs(p.x-x); w+=exp(-d*d*2600.)*.05+exp(-d*d*90000.)*.10;}\n"
+            + " c+=mix(vec3(.10,.22,.60),vec3(.55,.70,1.),.4)*w;\n"
+            + " vec2 g=floor(p*42.), q=fract(p*42.)-.5; float r=h(g);\n"
+            + " if(r>.985) c+=vec3(.6,.85,1.)*smoothstep(.13,0.,length(q))*(.4+.6*sin(t*1.6+r*90.));\n"
+            + " c*=1.-.45*pow(length(uv-vec2(.5,.55)),1.6);\n"
             + " gl_FragColor=vec4(c,1.);}";
     private static int program = -1; // -1 = not built yet, 0 = unsupported
     private static final long START = System.nanoTime();

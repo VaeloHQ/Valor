@@ -156,7 +156,7 @@ def main():
     cmd = [str(java), f"-Xmx{cfg['ram']}", f"-Djava.library.path={nat}", "-cp", os.pathsep.join(map(str, cp))]
     if log:
         cmd.append(ver["logging"]["client"]["argument"].replace("${path}", str(ASSETS / "log_configs" / log["id"])))
-    cmd += [forge["mainClass"]] + args
+    cmd += [forge["mainClass"]] + args + (sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])  # extra game args, e.g. -- --width 1280 --height 720
     print("Launching Valor...")
     if "--dry-run" in sys.argv:
         print(" ".join(cmd))

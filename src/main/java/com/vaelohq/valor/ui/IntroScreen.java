@@ -14,7 +14,7 @@ public class IntroScreen extends ValorScreen {
         float a = Ui.ease((t - 0.2f) / 0.8f), up = (1 - a) * 6;
         Ui.logo(cx - 24, cy - 44 + up, 48, a);
         Ui.semibold().drawCentered("Valor", cx, cy + 8 + up, 16, Ui.alpha(Ui.TEXT, a));
-        float p = Ui.ease((t - 0.9f) / 0.6f) * (0.55f + 0.3f * (float) Math.sin(t * 2.4));
+        float p = Ui.ease((t - 0.9f) / 0.6f) * (0.8f + 0.2f * (float) Math.sin(t * 2.4));
         ValorFont f = Ui.regular();
         f.drawCentered("Press to enter", cx, cy + 32, 8, Ui.alpha(Ui.MUTED, p));
         float lw = f.width("Press to enter", 8) / 2;
