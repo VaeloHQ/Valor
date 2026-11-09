@@ -1,5 +1,6 @@
 package com.vaelohq.valor;
 
+import com.vaelohq.valor.style.Splash;
 import com.vaelohq.valor.style.ValorPack;
 import com.vaelohq.valor.ui.ScreenSwap;
 import com.vaelohq.valor.ui.Ui;
@@ -29,6 +30,7 @@ public class Valor {
     public void preInit(FMLPreInitializationEvent event) {
         Config.load();
         ValorPack.register();
+        Splash.configure(Minecraft.getMinecraft().mcDataDir);
     }
 
     @Mod.EventHandler
