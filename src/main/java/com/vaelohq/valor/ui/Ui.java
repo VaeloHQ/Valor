@@ -105,7 +105,7 @@ public final class Ui {
     /** Dims the screen and draws a dialog panel; a (0..1) fades both in. */
     public static void dialog(float screenW, float screenH, float x, float y, float w, float h, float a) {
         rect(0, 0, screenW, screenH, alpha(0x66000000, a));
-        Shapes.draw(x, y, w, h, 8, alpha(0xF5101426, a), alpha(0xF50C1430, a), alpha(0x40FFFFFF, a), 0.5f, alpha(0xAA000000, a), 12, 4);
+        Shapes.draw(x, y, w, h, 8, alpha(0xFF101426, a), alpha(0xFF0C1430, a), alpha(0x40FFFFFF, a), 0.5f, alpha(0xAA000000, a), 12, 4);
     }
 
     /** Small tooltip panel next to the mouse; lines split on newlines. */

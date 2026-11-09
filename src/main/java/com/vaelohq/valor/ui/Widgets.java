@@ -2,6 +2,7 @@ package com.vaelohq.valor.ui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.GlStateManager;
 
 /** Menu controls. Each eases in after showAt, animates hover in about 150 ms, and shows a cyan ring when keyboard-focused. */
 public final class Widgets {
@@ -13,6 +14,16 @@ public final class Widgets {
         Shapes.round(x, y, 18, 9, 4.5f, Ui.alpha(Ui.mix(0xFF2A2F42, Ui.PRIMARY, k), a));
         Shapes.draw(x + 1.2f + k * 9, y + 1.2f, 6.6f, 6.6f, 3.3f, Ui.alpha(0xFFFFFFFF, a), Ui.alpha(0xFFE6EBF7, a), 0, 0,
                 Ui.alpha(0x66000000, a), 1.5f, 0.6f);
+    }
+
+    /** Small 10x10 arrow button: the play icon turned by angle degrees (-90 up, 90 down, 180 left). */
+    public static void drawArrow(float x, float y, float angle, boolean enabled, boolean hot, float a) {
+        if (hot && enabled) Shapes.round(x, y, 10, 10, 3, Ui.alpha(0x26FFFFFF, a));
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x + 5, y + 5, 0);
+        GlStateManager.rotate(angle, 0, 0, 1);
+        Ui.icon(Ui.I_PLAY, -3, -3, 6, Ui.alpha(!enabled ? 0x33FFFFFF : hot ? Ui.TEXT : Ui.MUTED, a));
+        GlStateManager.popMatrix();
     }
 
     /** Valor look for a vanilla slider knob at knobX: a blue fill up to the knob, then a dark knob with a cyan ring (text stays readable over it). */

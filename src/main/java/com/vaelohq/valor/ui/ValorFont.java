@@ -175,6 +175,36 @@ public final class ValorFont {
         return s.substring(0, n) + "...";
     }
 
+    /**
+     * Up to two lines of text with \u00a7 codes (a server MOTD, a pack description): its own line break first, otherwise
+     * one word wrap, and an ellipsis when it still does not fit. Colours carry over to the second line.
+     */
+    public java.util.List<String> wrapFormatted(String text, float size, float maxWidth) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        String carry = "";
+        for (String raw : text.split("\n")) {
+            String line = carry + raw;
+            if (out.isEmpty() && widthFormatted(line, size) > maxWidth) {
+                int cut = line.lastIndexOf(' ');
+                while (cut > 0 && widthFormatted(line.substring(0, cut), size) > maxWidth) cut = line.lastIndexOf(' ', cut - 1);
+                if (cut > 0) {
+                    out.add(line.substring(0, cut));
+                    line = lastColor(line.substring(0, cut)) + line.substring(cut + 1);
+                }
+            }
+            out.add(fit(line, size, maxWidth));
+            if (out.size() >= 2) break;
+            carry = lastColor(line);
+        }
+        return out.size() > 2 ? out.subList(0, 2) : out;
+    }
+
+    private static String lastColor(String s) {
+        for (int i = s.length() - 2; i >= 0; i--)
+            if (s.charAt(i) == '\u00a7' && "0123456789abcdefr".indexOf(Character.toLowerCase(s.charAt(i + 1))) >= 0) return s.substring(i, i + 2);
+        return "";
+    }
+
     /** Splits text into lines no wider than maxWidth (breaking at spaces; long words are cut). */
     public java.util.List<String> wrap(String text, float size, float maxWidth) {
         java.util.List<String> lines = new java.util.ArrayList<>();

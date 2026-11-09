@@ -12,12 +12,15 @@ public class ConfirmScreen extends ValorScreen {
     private final String title, message, yes, no;
     private final boolean dangerous;
     private final Consumer<Boolean> answer;
+    private String extraLabel;
+    private Runnable extra;
     private int delayTicks;
     private float px, py, pw, ph;
     private List<String> lines;
 
     /**
      * @param behind    screen drawn underneath (null for none); not returned to automatically
+     * @param no        label of the second button, or null for a single button
      * @param dangerous colours the yes button as destructive
      */
     public ConfirmScreen(GuiScreen behind, String title, String message, String yes, String no, boolean dangerous, Consumer<Boolean> answer) {
@@ -30,6 +33,13 @@ public class ConfirmScreen extends ValorScreen {
         this.answer = answer;
     }
 
+    /** Adds a middle button that runs an action and then answers false (vanilla's "Copy" on link prompts). */
+    public ConfirmScreen extra(String label, Runnable action) {
+        extraLabel = label;
+        extra = action;
+        return this;
+    }
+
     /** Keeps both buttons disabled for this many ticks (20 per second). */
     public ConfirmScreen delay(int ticks) {
         delayTicks = ticks;
@@ -40,17 +50,19 @@ public class ConfirmScreen extends ValorScreen {
     public void initGui() {
         super.initGui();
         if (behind != null) behind.setWorldAndResolution(mc, width, height);   // keep the screen underneath laid out for this size
-        pw = 190;
+        int n = 1 + (no != null ? 1 : 0) + (extra != null ? 1 : 0);
+        pw = Math.min(width - 20, Math.max(n == 3 ? 230 : 190, Ui.semibold().width(title, 8) + 32));   // wide enough for the title
         lines = Ui.regular().wrap(message, 5.6f, pw - 32);
         ph = 34 + (message.isEmpty() ? 0 : lines.size() * 8 + 6) + 16 + 16;
         px = (width - pw) / 2;
         py = (height - ph) / 2;
-        float bw = (pw - 32 - 6) / 2, by = py + ph - 16 - 16;
+        float bw = (pw - 32 - 6 * (n - 1)) / n, by = py + ph - 16 - 16, bx = px + 16;
         long t = opened + 80;
-        Widgets.Pill y = new Widgets.Pill(1, px + 16, by, bw, 16, 3, -1, yes, !dangerous, t);
+        Widgets.Pill y = new Widgets.Pill(1, bx, by, bw, 16, 8, -1, yes, !dangerous, t);
         if (dangerous) y.danger();
         buttonList.add(y);
-        buttonList.add(new Widgets.Pill(0, px + 16 + bw + 6, by, bw, 16, 3, -1, no, false, t));
+        if (extra != null) buttonList.add(new Widgets.Pill(2, bx += bw + 6, by, bw, 16, 8, -1, extraLabel, false, t));
+        if (no != null) buttonList.add(new Widgets.Pill(0, bx + bw + 6, by, bw, 16, 8, -1, no, false, t));
         for (GuiButton b : buttonList) b.enabled = delayTicks <= 0;
     }
 
@@ -79,6 +91,7 @@ public class ConfirmScreen extends ValorScreen {
 
     @Override
     protected void actionPerformed(GuiButton b) {
+        if (b.id == 2) extra.run();
         answer.accept(b.id == 1);
     }
 

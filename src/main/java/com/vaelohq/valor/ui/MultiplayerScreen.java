@@ -8,7 +8,6 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.network.LanServerDetector;
 import net.minecraft.client.network.OldServerPinger;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.util.EnumChatFormatting;
@@ -291,7 +290,7 @@ public class MultiplayerScreen extends ValorScreen {
         ValorFont semi = Ui.semibold();
         semi.draw(semi.fit(d.serverName, 6.5f, cxp - 6 - tx), tx, y + 4.5f, 6.5f, Ui.alpha(Ui.TEXT, a));
         String motd = d.serverMOTD == null ? "" : FMLClientHandler.instance().fixDescription(d.serverMOTD);
-        List<String> lines = motdLines(motd, 5.2f, lw - ICON - 10 - 30);
+        List<String> lines = small.wrapFormatted(motd, 5.2f, lw - ICON - 10 - 30);
         boolean failed = pinged && d.pingToServer < 0;   // error text: vanilla's dark red is unreadable on navy
         for (int l = 0; l < lines.size(); l++) {
             if (failed) small.draw(lines.get(l).replaceAll("\u00a7.", ""), tx, y + 14 + l * 7.5f, 5.2f, Ui.alpha(Ui.DANGER, a));
@@ -300,8 +299,8 @@ public class MultiplayerScreen extends ValorScreen {
 
         if (hov) {
             float ay = y + ROW - 13;
-            arrow(lx + lw - 24, ay, true, i > 0, inside(mx, my, lx + lw - 24, ay, 10, 10), a);
-            arrow(lx + lw - 13, ay, false, i < entries.size() - 1, inside(mx, my, lx + lw - 13, ay, 10, 10), a);
+            Widgets.drawArrow(lx + lw - 24, ay, -90, i > 0, inside(mx, my, lx + lw - 24, ay, 10, 10), a);
+            Widgets.drawArrow(lx + lw - 13, ay, 90, i < entries.size() - 1, inside(mx, my, lx + lw - 13, ay, 10, 10), a);
         }
     }
 
@@ -316,16 +315,6 @@ public class MultiplayerScreen extends ValorScreen {
             int c = level < 0 ? (on ? Ui.MUTED : 0x33FFFFFF) : on ? lit : level == 5 ? 0x66FF5A6E : 0x33FFFFFF;
             Shapes.round(x + b * 2.4f, y + 6 - h, 1.6f, h, 0.8f, Ui.alpha(c, a));
         }
-    }
-
-    /** Small up/down arrow button (the play icon turned on its side). */
-    private static void arrow(float x, float y, boolean up, boolean enabled, boolean hot, float a) {
-        if (hot && enabled) Shapes.round(x, y, 10, 10, 3, Ui.alpha(0x26FFFFFF, a));
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x + 5, y + 5, 0);
-        GlStateManager.rotate(up ? -90 : 90, 0, 0, 1);
-        Ui.icon(Ui.I_PLAY, -3, -3, 6, Ui.alpha(!enabled ? 0x33FFFFFF : hot ? Ui.TEXT : Ui.MUTED, a));
-        GlStateManager.popMatrix();
     }
 
     private void drawLan(LanServerDetector.LanServer s, int i, float y, boolean hov, float a) {
@@ -358,34 +347,6 @@ public class MultiplayerScreen extends ValorScreen {
         float w = f.width(text, 5.2f) + 11, x = (width - w) / 2;
         Ui.spinner(x + 3.5f, y + SCAN / 2, 3.2f, a);
         f.draw(text, x + 11, y + SCAN / 2 - 3.2f, 5.2f, Ui.alpha(0xFF6B7591, a));
-    }
-
-    /** Up to two MOTD lines: the server's own line break first, otherwise one word wrap; colours carry over. */
-    private static List<String> motdLines(String motd, float size, float maxW) {
-        ValorFont f = Ui.regular();
-        List<String> out = new ArrayList<>();
-        String carry = "";
-        for (String raw : motd.split("\n")) {
-            String line = carry + raw;
-            if (out.isEmpty() && f.widthFormatted(line, size) > maxW) {
-                int cut = line.lastIndexOf(' ');
-                while (cut > 0 && f.widthFormatted(line.substring(0, cut), size) > maxW) cut = line.lastIndexOf(' ', cut - 1);
-                if (cut > 0) {
-                    out.add(line.substring(0, cut));
-                    line = lastColor(line.substring(0, cut)) + line.substring(cut + 1);
-                }
-            }
-            out.add(f.fit(line, size, maxW));
-            if (out.size() >= 2) break;
-            carry = lastColor(line);
-        }
-        return out.size() > 2 ? out.subList(0, 2) : out;
-    }
-
-    private static String lastColor(String s) {
-        for (int i = s.length() - 2; i >= 0; i--)
-            if (s.charAt(i) == '§' && "0123456789abcdefr".indexOf(Character.toLowerCase(s.charAt(i + 1))) >= 0) return s.substring(i, i + 2);
-        return "";
     }
 
     private static boolean inside(int mx, int my, float x, float y, float w, float h) {

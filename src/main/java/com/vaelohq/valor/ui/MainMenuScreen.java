@@ -2,7 +2,6 @@ package com.vaelohq.valor.ui;
 
 import com.vaelohq.valor.Recent;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiLanguage;
 import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.multiplayer.GuiConnecting;
@@ -96,7 +95,7 @@ public class MainMenuScreen extends ValorScreen {
             case SOON_A:
             case SOON_B: toast("Coming soon"); break;
             case QUIT: mc.shutdown(); break;
-            case LANGUAGE: mc.displayGuiScreen(new GuiLanguage(this, mc.gameSettings, mc.getLanguageManager())); break;
+            case LANGUAGE: mc.displayGuiScreen(new OptionsScreen(this, OptionsScreen.Category.LANGUAGE)); break;
             case CREDITS: mc.displayGuiScreen(new GuiWinGame()); break;
         }
     }

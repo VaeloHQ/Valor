@@ -11,7 +11,6 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Language;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.gui.GuiScreenResourcePacks;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EnumPlayerModelParts;
 import net.minecraft.util.ResourceLocation;
@@ -31,7 +30,7 @@ import java.util.List;
  * Key bindings and languages work as in GuiControls and GuiLanguage. Options are saved when the screen closes.
  */
 public class OptionsScreen extends ValorScreen {
-    private enum Category {
+    public enum Category {
         GENERAL("General"), VIDEO("Video"), CONTROLS("Controls"), SOUND("Music & Sounds"), CHAT("Chat"), SKIN("Skin"),
         LANGUAGE("Language"), PACKS("Resource Packs"), VALOR("Valor");
         final String label;
@@ -64,6 +63,12 @@ public class OptionsScreen extends ValorScreen {
 
     public OptionsScreen(GuiScreen parent) {
         this.parent = parent;
+    }
+
+    /** Opens on the given category (for vanilla screens that open one settings page directly). */
+    public OptionsScreen(GuiScreen parent, Category category) {
+        this.parent = parent;
+        this.category = category;
     }
 
     /** One line in the list. Draws itself at (x, y) with width w; most rows act on click, sliders on drag. */
@@ -296,7 +301,7 @@ public class OptionsScreen extends ValorScreen {
                 });
                 break;
             case PACKS:
-                rows.add(action("Resource packs", "Open", () -> mc.displayGuiScreen(new GuiScreenResourcePacks(this))));
+                rows.add(action("Resource packs", "Open", () -> mc.displayGuiScreen(new ResourcePacksScreen(this))));
                 break;
             case VALOR:
                 rows.add(new Toggle("Valor style for the HUD, inventories and buttons") {
