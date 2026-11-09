@@ -139,7 +139,7 @@ public final class Widgets {
     /** "Continue" card for the last server or world. */
     public static class Card extends Base {
         String title, sub;
-        boolean empty;
+        boolean empty, world;
 
         public Card(int id, float x, float y, float w, float h, long showAt) {
             super(id, x, y, w, h, "", showAt);
@@ -153,10 +153,7 @@ public final class Widgets {
                     Ui.alpha(0x88000000, a), 7, 3);
             ring(y, r, a);
             float pad = h * 0.18f, tile = h - pad * 2;
-            Shapes.draw(xPosition + pad, y + pad, tile, tile, tile * 0.28f, Ui.alpha(0xFF4C85FF, a), Ui.alpha(0xFF1A3FD1, a), 0, 0, 0, 0, 0);
-            if (empty) Ui.icon(Ui.I_SERVER, xPosition + pad + tile * 0.25f, y + pad + tile * 0.25f, tile * 0.5f, Ui.alpha(0xFFFFFFFF, a));
-            else Ui.bold().drawCentered(title.substring(0, 1).toUpperCase(), xPosition + pad + tile / 2, y + pad + tile * 0.2f, tile * 0.55f,
-                    Ui.alpha(0xFFFFFFFF, a));
+            Ui.placeholder(!empty && world ? "world" : "server", xPosition + pad, y + pad, tile, tile * 0.28f, a);
             float tx = xPosition + pad * 2 + tile;
             Ui.regular().draw(sub, tx, y + h * 0.2f, h * 0.22f, Ui.alpha(0xFF8FB4FF, a));
             Ui.semibold().draw(title, tx, y + h * 0.5f, h * 0.27f, Ui.alpha(Ui.TEXT, a));

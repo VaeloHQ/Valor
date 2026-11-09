@@ -14,7 +14,7 @@ import java.util.Calendar;
 /** Main menu: 3D head, greeting, title, action pills, Continue card and an icon dock. */
 public class MainMenuScreen extends ValorScreen {
     private static final int MULTI = 0, SINGLE = 1, ACCOUNT = 2, CONTINUE = 3, SETTINGS = 4, MODS = 5, SOON_A = 6, SOON_B = 7,
-            QUIT = 8, LANGUAGE = 9, CREDITS = 10;
+            QUIT = 8, LANGUAGE = 9, CREDITS = 10, WALLPAPER = 11;
     private Widgets.Card card;
     private int focus = -1;
     private float top;
@@ -40,6 +40,7 @@ public class MainMenuScreen extends ValorScreen {
             float ix = dx + i * (s + gap) + (i == 4 ? 5 : 0);
             buttonList.add(new Widgets.DockIcon(SETTINGS + i, ix, dy, s, icons[i], labels[i], i == 2 || i == 3, t + 200));
         }
+        buttonList.add(new Widgets.Pill(WALLPAPER, 8, 8, 64, 15, 7.5f, Ui.I_IMAGE, "Wallpaper", false, t + 200));
         float lx = width - 12;
         for (String[] l : new String[][]{{"Credits", "" + CREDITS}, {"Language", "" + LANGUAGE}}) {
             lx -= Ui.regular().width(l[0], 5.5f);
@@ -70,6 +71,7 @@ public class MainMenuScreen extends ValorScreen {
         b.draw("Valor", cx - tw / 2, top + 55 + rise, 24, Ui.alpha(0xFFFFFFFF, a), Ui.alpha(0xFF8DB2FF, a));
 
         card.empty = !Recent.has() || Recent.name.isEmpty();
+        card.world = Recent.world;
         card.title = card.empty ? "No recent server" : Recent.name;
         card.sub = Recent.has() ? "Continue  ·  " + Recent.ago() : "Join a server to pick up here next time";
 
@@ -97,6 +99,7 @@ public class MainMenuScreen extends ValorScreen {
             case QUIT: mc.shutdown(); break;
             case LANGUAGE: mc.displayGuiScreen(new OptionsScreen(this, OptionsScreen.Category.LANGUAGE)); break;
             case CREDITS: mc.displayGuiScreen(new GuiWinGame()); break;
+            case WALLPAPER: mc.displayGuiScreen(new WallpaperScreen(this)); break;
         }
     }
 

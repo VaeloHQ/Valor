@@ -13,6 +13,8 @@ import java.util.Properties;
 public final class Config {
     /** Valor's own look for the HUD, inventories and vanilla GUI textures. Player resource packs still override it. */
     public static boolean valorStyle = true;
+    /** Menu wallpaper: "silk" or "glow" (Valor shaders), or the name of a file in config/valor-wallpapers. */
+    public static String wallpaper = "silk";
 
     private static File file() {
         return new File(Loader.instance().getConfigDir(), "valor.properties");
@@ -29,11 +31,13 @@ public final class Config {
             }
         }
         valorStyle = Boolean.parseBoolean(p.getProperty("valorStyle", "true"));
+        wallpaper = p.getProperty("wallpaper", "silk");
     }
 
     public static void save() {
         Properties p = new Properties();
         p.setProperty("valorStyle", String.valueOf(valorStyle));
+        p.setProperty("wallpaper", wallpaper);
         try (OutputStream out = new FileOutputStream(file())) {
             p.store(out, "Valor settings");
         } catch (Exception e) {

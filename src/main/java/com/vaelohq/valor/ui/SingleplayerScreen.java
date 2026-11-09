@@ -123,9 +123,7 @@ public class SingleplayerScreen extends ValorScreen {
         String name = name(i);
         float ix = x + 4, iy = y + 4;
         boolean hardcore = w.isHardcoreModeEnabled();
-        Shapes.draw(ix, iy, ICON, ICON, 6, Ui.alpha(hardcore ? 0xFFFF6B7D : 0xFF4C85FF, a), Ui.alpha(hardcore ? 0xFFC0223A : 0xFF1A3FD1, a), 0, 0, 0, 0, 0);
-        Ui.bold().drawCentered(name.trim().isEmpty() ? "?" : name.trim().substring(0, 1).toUpperCase(), ix + ICON / 2, iy + ICON * 0.2f, ICON * 0.55f,
-                Ui.alpha(0xFFFFFFFF, a));
+        Ui.placeholder(hardcore ? "world_hardcore" : "world", ix, iy, ICON, 6, a);
 
         float tx = x + ICON + 10, room = lw - ICON - 18;
         ValorFont semi = Ui.semibold(), small = Ui.regular();

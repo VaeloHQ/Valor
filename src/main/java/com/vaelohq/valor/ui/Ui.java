@@ -23,10 +23,12 @@ public final class Ui {
 
     /** Icon cells in textures/icons.png (4x4 grid, Lucide icons). */
     public static final int I_SETTINGS = 0, I_GRID = 1, I_PLACEHOLDER = 2, I_POWER = 3, I_PLAY = 4, I_SERVER = 5,
-            I_USER = 6, I_EYE = 7, I_EYE_OFF = 8, I_CLOSE = 9, I_MINUS = 10, I_LOGIN = 11;
+            I_USER = 6, I_EYE = 7, I_EYE_OFF = 8, I_CLOSE = 9, I_MINUS = 10, I_LOGIN = 11, I_IMAGE = 12, I_PLUS = 13, I_FOLDER = 14,
+            I_TRASH = 15;
 
     private static ValorFont regular, semibold, bold;
     private static int logo = -1, icons = -1;
+    private static final java.util.Map<String, Integer> placeholders = new java.util.HashMap<>();
 
     public static ValorFont regular() {
         return regular != null ? regular : (regular = new ValorFont("Inter-Regular.ttf", 48, 64, 6, 255));
@@ -121,6 +123,29 @@ public final class Ui {
         GlStateManager.color(1, 1, 1, 1);
     }
 
+/** Opens the folder in the system file browser, trying the same ways vanilla does. */
+    public static void openFolder(java.io.File dir) {
+        String path = dir.getAbsolutePath();
+        try {
+            if (net.minecraft.util.Util.getOSType() == net.minecraft.util.Util.EnumOS.OSX) {
+                Runtime.getRuntime().exec(new String[]{"/usr/bin/open", path});
+                return;
+            }
+            if (net.minecraft.util.Util.getOSType() == net.minecraft.util.Util.EnumOS.WINDOWS) {
+                Runtime.getRuntime().exec(new String[]{"cmd.exe", "/C", "start", "\"Open file\"", path});
+                return;
+            }
+        } catch (java.io.IOException e) {
+            com.vaelohq.valor.Valor.LOGGER.error("Couldn't open file", e);
+        }
+        try {
+            java.awt.Desktop.getDesktop().browse(dir.toURI());
+        } catch (Throwable t) {
+            com.vaelohq.valor.Valor.LOGGER.error("Couldn't open link", t);
+            org.lwjgl.Sys.openURL("file://" + path);
+        }
+    }
+
     /** Dims the screen and draws a dialog panel; a (0..1) fades both in. */
     public static void dialog(float screenW, float screenH, float x, float y, float w, float h, float a) {
         rect(0, 0, screenW, screenH, alpha(0x66000000, a));
@@ -146,12 +171,25 @@ public final class Ui {
         if (logo != -1) TextureUtil.deleteTexture(logo);
         if (icons != -1) TextureUtil.deleteTexture(icons);
         logo = icons = -1;
+        for (int tex : placeholders.values()) TextureUtil.deleteTexture(tex);
+        placeholders.clear();
         Background.release();   // the small shape shader stays: the in-game HUD and buttons use it
     }
 
     public static void logo(float x, float y, float size, float alpha) {
         if (logo == -1) logo = load("logo.png");
         quad(logo, x, y, size, size, 0, 0, 1, 1, alpha(0xFFFFFFFF, alpha));
+    }
+
+    /**
+     * Draws a stand-in picture from textures/placeholders (world, world_hardcore, server) with rounded corners. The PNGs
+     * are plain squares, so they can be replaced with any art.
+     */
+    public static void placeholder(String name, float x, float y, float size, float radius, float alpha) {
+        Integer tex = placeholders.get(name);
+        if (tex == null) placeholders.put(name, tex = load("placeholders/" + name + ".png"));
+        GlStateManager.bindTexture(tex);
+        Shapes.image(x, y, size, size, radius, alpha);
     }
 
     public static void icon(int i, float x, float y, float size, int argb) {

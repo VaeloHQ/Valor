@@ -9,12 +9,9 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.ResourcePackRepository;
 import net.minecraft.client.resources.data.PackMetadataSection;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Util;
-import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -232,7 +229,7 @@ public class ResourcePacksScreen extends ValorScreen {
 
     @Override
     protected void actionPerformed(GuiButton b) {
-        if (b.id == FOLDER) openFolder(mc.getResourcePackRepository().getDirResourcepacks());
+        if (b.id == FOLDER) Ui.openFolder(mc.getResourcePackRepository().getDirResourcepacks());
         else done();
     }
 
@@ -258,28 +255,5 @@ public class ResourcePacksScreen extends ValorScreen {
             mc.refreshResources();
         }
         mc.displayGuiScreen(parent);
-    }
-
-    /** Opens the folder in the system file browser, trying the same ways vanilla does. */
-    private static void openFolder(File dir) {
-        String path = dir.getAbsolutePath();
-        try {
-            if (Util.getOSType() == Util.EnumOS.OSX) {
-                Runtime.getRuntime().exec(new String[]{"/usr/bin/open", path});
-                return;
-            }
-            if (Util.getOSType() == Util.EnumOS.WINDOWS) {
-                Runtime.getRuntime().exec(new String[]{"cmd.exe", "/C", "start", "\"Open file\"", path});
-                return;
-            }
-        } catch (IOException e) {
-            com.vaelohq.valor.Valor.LOGGER.error("Couldn't open file", e);
-        }
-        try {
-            java.awt.Desktop.getDesktop().browse(dir.toURI());
-        } catch (Throwable t) {
-            com.vaelohq.valor.Valor.LOGGER.error("Couldn't open link", t);
-            Sys.openURL("file://" + path);
-        }
     }
 }

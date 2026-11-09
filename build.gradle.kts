@@ -84,6 +84,10 @@ dependencies {
     }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT")
 
+    // Pure-Java H.264 decoder for MP4 menu wallpapers
+    shadowImpl("org.jcodec:jcodec:0.2.5")
+    shadowImpl("org.jcodec:jcodec-javase:0.2.5")
+
     // If you don't want to log in with your real minecraft account, remove this line
     runtimeOnly("me.djtheredstoner:DevAuth-forge-legacy:1.2.1")
 
@@ -146,6 +150,7 @@ tasks.shadowJar {
 
     // If you want to include other dependencies and shadow them, you can relocate them in here
     fun relocate(name: String) = relocate(name, "$baseGroup.deps.$name")
+    relocate("org.jcodec")
 }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)

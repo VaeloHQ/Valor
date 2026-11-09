@@ -251,7 +251,7 @@ public class MultiplayerScreen extends ValorScreen {
         if (e.icon != null) {
             mc.getTextureManager().bindTexture(e.iconLoc);
             Shapes.image(ix, iy, ICON, ICON, 6, a);
-        } else letterTile(d.serverName, ix, iy, a);
+        } else Ui.placeholder("server", ix, iy, ICON, 6, a);
         if (hov && inside(mx, my, ix, iy, ICON, ICON)) {
             Shapes.round(ix, iy, ICON, ICON, 6, Ui.alpha(0xA0000000, a));
             Ui.icon(Ui.I_PLAY, ix + ICON * 0.3f, iy + ICON * 0.3f, ICON * 0.4f, Ui.alpha(0xFFFFFFFF, a));
@@ -320,25 +320,13 @@ public class MultiplayerScreen extends ValorScreen {
     private void drawLan(LanServerDetector.LanServer s, int i, float y, boolean hov, float a) {
         card(y, i, hover(s, hov), a);
         float ix = lx + 4, iy = y + 4;
-        tile(ix, iy, a);
-        Ui.icon(Ui.I_SERVER, ix + ICON * 0.25f, iy + ICON * 0.25f, ICON * 0.5f, Ui.alpha(0xFFFFFFFF, a));
+        Ui.placeholder("server", ix, iy, ICON, 6, a);
         float tx = lx + ICON + 10;
         ValorFont semi = Ui.semibold(), small = Ui.regular();
         semi.draw(semi.fit(s.getServerMotd(), 6.5f, lw - ICON - 18), tx, y + 4.5f, 6.5f, Ui.alpha(Ui.TEXT, a));
         small.draw("LAN world", tx, y + 14, 5.2f, Ui.alpha(Ui.MUTED, a));
         String ip = mc.gameSettings.hideServerAddress ? "Address hidden" : s.getServerIpPort();
         small.draw(ip, tx, y + 21.5f, 5.2f, Ui.alpha(0xFF6B7591, a));
-    }
-
-    private static void tile(float x, float y, float a) {
-        Shapes.draw(x, y, ICON, ICON, 6, Ui.alpha(0xFF4C85FF, a), Ui.alpha(0xFF1A3FD1, a), 0, 0, 0, 0, 0);
-    }
-
-    /** Stand-in for a server without an icon: its first letter on a blue tile. */
-    private static void letterTile(String name, float x, float y, float a) {
-        tile(x, y, a);
-        String letter = name.trim().isEmpty() ? "?" : name.trim().substring(0, 1).toUpperCase();
-        Ui.bold().drawCentered(letter, x + ICON / 2, y + ICON * 0.2f, ICON * 0.55f, Ui.alpha(0xFFFFFFFF, a));
     }
 
     private void drawScan(float y, float a) {
