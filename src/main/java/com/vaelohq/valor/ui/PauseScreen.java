@@ -3,8 +3,6 @@ package com.vaelohq.valor.ui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiShareToLan;
-import net.minecraft.client.gui.achievement.GuiAchievements;
-import net.minecraft.client.gui.achievement.GuiStats;
 import net.minecraft.realms.RealmsBridge;
 import net.minecraftforge.fml.client.GuiModList;
 
@@ -55,8 +53,8 @@ public class PauseScreen extends ValorScreen {
                 mc.displayGuiScreen(null);
                 mc.setIngameFocus();
                 break;
-            case ACHIEVEMENTS: if (mc.thePlayer != null) mc.displayGuiScreen(new GuiAchievements(this, mc.thePlayer.getStatFileWriter())); break;
-            case STATS: if (mc.thePlayer != null) mc.displayGuiScreen(new GuiStats(this, mc.thePlayer.getStatFileWriter())); break;
+            case ACHIEVEMENTS: if (mc.thePlayer != null) mc.displayGuiScreen(new AchievementsScreen(this, mc.thePlayer.getStatFileWriter())); break;
+            case STATS: if (mc.thePlayer != null) mc.displayGuiScreen(new StatsScreen(this, mc.thePlayer.getStatFileWriter())); break;
             case LAN: mc.displayGuiScreen(new GuiShareToLan(this)); break;
             case MOD_OPTIONS: mc.displayGuiScreen(new GuiModList(this)); break; // what Forge's showInGameModOptions does
         }

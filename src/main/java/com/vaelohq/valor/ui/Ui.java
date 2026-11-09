@@ -102,6 +102,25 @@ public final class Ui {
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
     }
 
+    /** Draws an item icon with its top-left at (x, y), size 16 * scale; depth testing is left off afterwards for 2D drawing. */
+    public static void item(net.minecraft.item.ItemStack stack, float x, float y, float scale) {
+        if (stack == null) return;
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, 0);
+        GlStateManager.scale(scale, scale, 1);
+        net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+        GlStateManager.enableRescaleNormal();
+        GlStateManager.enableDepth();
+        net.minecraft.client.Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(stack, 0, 0);
+        net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableRescaleNormal();
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.enableBlend();
+        GlStateManager.popMatrix();
+        GlStateManager.color(1, 1, 1, 1);
+    }
+
     /** Dims the screen and draws a dialog panel; a (0..1) fades both in. */
     public static void dialog(float screenW, float screenH, float x, float y, float w, float h, float a) {
         rect(0, 0, screenW, screenH, alpha(0x66000000, a));

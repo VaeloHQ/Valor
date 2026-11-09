@@ -9,6 +9,8 @@ import com.vaelohq.valor.mixin.GuiSelectWorldAccessor;
 import com.vaelohq.valor.mixin.GuiYesNoAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.achievement.GuiAchievements;
+import net.minecraft.client.gui.achievement.GuiStats;
 
 import java.lang.reflect.Field;
 
@@ -49,6 +51,10 @@ public final class ScreenSwap {
         if (gui instanceof GuiLanguage) return new OptionsScreen(parentOf(gui), OptionsScreen.Category.LANGUAGE);
         if (gui instanceof GuiSnooper) return new OptionsScreen(parentOf(gui), OptionsScreen.Category.GENERAL);
         if (gui instanceof GuiShareToLan) return new LanScreen(parentOf(gui));
+        if (gui instanceof GuiAchievements && Minecraft.getMinecraft().thePlayer != null)
+            return new AchievementsScreen(parentOf(gui), Minecraft.getMinecraft().thePlayer.getStatFileWriter());
+        if (gui instanceof GuiStats && Minecraft.getMinecraft().thePlayer != null)
+            return new StatsScreen(parentOf(gui), Minecraft.getMinecraft().thePlayer.getStatFileWriter());
         if (gui instanceof GuiScreenResourcePacks) return new ResourcePacksScreen(parentOf(gui));
         // Only these exact prompts: subclasses such as Forge's old-save warning draw their own text.
         if (type == GuiYesNo.class || type == GuiConfirmOpenLink.class) return confirm((GuiYesNo) gui);
