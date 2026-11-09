@@ -66,8 +66,10 @@ document.querySelectorAll('[data-win]').forEach((b) => b.addEventListener('click
 function renderAccounts() {
   const active = settings.accounts[settings.active];
   $('avatar-img').replaceWith(Object.assign(headImg(active), { id: 'avatar-img' }));
+  const offline = !active && settings.dev && settings.offlineName;
   $('playing').replaceChildren(...(active ? [headImg(active), el('span', {}, 'Playing as ', el('b', { textContent: active.name }))]
-    : [el('span', { textContent: 'Sign in with Microsoft in Settings to play' })]));
+    : offline ? [headImg(null), el('span', {}, 'Playing offline as ', el('b', { textContent: settings.offlineName }))]
+      : [el('span', { textContent: 'Sign in with Microsoft in Settings to play' })]));
   const row = (a, i, removable) => {
     const node = el('div', { className: 'account' + (i === settings.active ? ' selected' : '') }, headImg(a, 'head'),
       el('div', { className: 'who' }, a.name, el('small', { textContent: 'Microsoft account' })));
@@ -260,6 +262,12 @@ function bindSettings() {
     mark();
   }));
   mark();
+  $('offline-field').hidden = !settings.dev;
+  $('offline-name').value = settings.offlineName;
+  $('offline-name').addEventListener('change', async () => {
+    settings = await valor.setSettings({ offlineName: $('offline-name').value.trim() });
+    renderAccounts();
+  });
   $('game-dir').textContent = settings.gameDir;
   $('open-folder').addEventListener('click', () => valor.openGameFolder());
 }

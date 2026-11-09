@@ -14,6 +14,7 @@ const DEFAULTS = {
   accounts: [],              // { type: 'msa', name, uuid, refresh (encrypted) }
   active: 0,
   servers: [],               // { name, host, port } added by the player
+  offlineName: '',           // dev mode only (~/.Valor/dev exists): the name to play offline with
 };
 
 function load() {

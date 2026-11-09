@@ -164,6 +164,7 @@ input:focus { border-color: var(--primary-hi); box-shadow: 0 0 0 3px rgba(37, 99
 .field b { color: var(--text); }
 .field.row { flex-direction: row; gap: 10px; }
 .field.row label { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.field.offline { margin: 16px 0 0; }
 .path-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 .path-row code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }

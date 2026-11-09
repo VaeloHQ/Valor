@@ -110,6 +110,10 @@
           <h3>Accounts</h3>
           <div id="account-list"></div>
           <button class="primary wide" id="microsoft"><img src="icons/user.svg" alt="">Sign in with Microsoft</button>
+          <label class="field offline" id="offline-field" hidden>
+            <span>Offline name <i>(dev mode: used when no Microsoft account is signed in)</i></span>
+            <input id="offline-name" maxlength="16" placeholder="Player">
+          </label>
           <div class="error" id="account-error" hidden></div>
         </div>
       </div>

@@ -27,11 +27,14 @@ function createWindow() {
   win.webContents.on('will-navigate', (e) => e.preventDefault());
 }
 
+/** Offline play is for Valor's developers only: it's on when ~/.Valor/dev exists (a file or a folder). */
+const devMode = () => fs.existsSync(path.join(game.ROOT, 'dev'));
+
 /** Settings as the page sees them: no tokens. */
 function publicSettings() {
   const s = store.get();
   return { ...s, accounts: s.accounts.map(({ type, name, uuid }) => ({ type, name, uuid })), gameDir: game.GAME, running: !!running,
-    totalMemory: Math.floor(require('os').totalmem() / 1048576) };
+    totalMemory: Math.floor(require('os').totalmem() / 1048576), dev: devMode() };
 }
 
 /** The Valor mod to install: bundled with the packaged launcher, or the newest local build when developing. */
@@ -42,7 +45,7 @@ function modJar() {
   return jars.length ? path.join(libs, jars.sort().pop()) : null;
 }
 
-const EDITABLE = ['ram', 'width', 'height', 'fullscreen', 'javaPath', 'jvmArgs', 'afterLaunch', 'servers'];
+const EDITABLE = ['ram', 'width', 'height', 'fullscreen', 'javaPath', 'jvmArgs', 'afterLaunch', 'servers', 'offlineName'];
 
 ipcMain.handle('settings:get', () => publicSettings());
 ipcMain.handle('settings:set', (e, patch) => {
@@ -77,6 +80,10 @@ ipcMain.handle('accounts:remove', (e, i) => {
 async function launchAccount() {
   const s = store.get();
   const a = s.accounts[s.active];
+  if (!a && devMode()) {
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(s.offlineName)) throw new Error('Set an offline name in Settings: 3 to 16 letters, numbers or _.');
+    return { name: s.offlineName, uuid: game.offlineUuid(s.offlineName), token: '0', offline: true };
+  }
   if (!a) throw new Error('Sign in with your Microsoft account first.');
   const refresh = store.unseal(a.refresh);
   if (!refresh) throw new Error('Sign in with Microsoft again.');

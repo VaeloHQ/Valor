@@ -15,4 +15,8 @@ Valor signs in with Microsoft only, so only players who own Minecraft can play. 
 Until Microsoft approves that app for the Minecraft API (form at aka.ms/mce-reviewappid), sign-in stops with
 "Valor is waiting for Microsoft to approve it for Minecraft sign-in."
 
-For testing without an account, `tools/dev_launcher.py` starts the game offline.
+## Dev mode (offline)
+
+For Valor's developers only: create a file or folder named `dev` in `~/.Valor` (`C:\Users\<name>\.Valor\dev`) and restart
+the launcher. Settings then shows an **Offline name**, and Launch plays offline with it when no Microsoft account is
+signed in (singleplayer and offline-mode servers). `tools/dev_launcher.py` also starts the game offline without the launcher.
