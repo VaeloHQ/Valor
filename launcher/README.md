@@ -4,14 +4,15 @@ Electron app that installs Minecraft 1.8.9, Forge and Java 8 into `~/.Valor/game
 
 - Run from source: `npm install`, then `npm start` (uses the newest `../build/libs/valor-*.jar`).
 - Windows installer: built by `.github/workflows/launcher.yml`, which bundles the mod as `resources/valor.jar`.
+- The installer puts the launcher in `C:\Users\<name>\.Valor\launcher`. Everything else is in `~/.Valor` too: Electron data in
+  `launcher-data`, settings in `launcher.json`, Java in `runtime` and the game in `game`.
 
 ## Microsoft accounts
 
-Microsoft sign-in needs Valor's own Azure app:
+Valor signs in with Microsoft only, so only players who own Minecraft can play. The launcher uses Valor's Azure app
+(client ID `f33b6a77-918e-47d4-919c-6d866b6ca339` in `src/auth.js`; a client ID is public, not a secret).
 
-1. In portal.azure.com, register an app for **personal Microsoft accounts**.
-2. Add the redirect URI `https://login.microsoftonline.com/common/oauth2/nativeclient` under **Mobile and desktop applications**.
-3. Ask Microsoft to allow it to use the Minecraft API with their form at aka.ms/mce-reviewappid (approval can take days).
-4. Paste the app's client ID in the launcher under Settings, Microsoft sign-in.
+Until Microsoft approves that app for the Minecraft API (form at aka.ms/mce-reviewappid), sign-in stops with
+"Valor is waiting for Microsoft to approve it for Minecraft sign-in."
 
-Offline accounts work without any of this (singleplayer and offline-mode servers).
+For testing without an account, `tools/dev_launcher.py` starts the game offline.

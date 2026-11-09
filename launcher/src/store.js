@@ -11,8 +11,7 @@ const DEFAULTS = {
   ram: Math.min(4096, Math.max(1024, Math.floor(os.totalmem() / 1048576 / 4 / 256) * 256)),
   width: 1280, height: 720, fullscreen: false, javaPath: '', jvmArgs: '',
   afterLaunch: 'minimize',   // keep, minimize or close
-  clientId: '',              // Azure app client ID for Microsoft sign-in
-  accounts: [],              // { type: 'msa' | 'offline', name, uuid, refresh (encrypted, msa only) }
+  accounts: [],              // { type: 'msa', name, uuid, refresh (encrypted) }
   active: 0,
   servers: [],               // { name, host, port } added by the player
 };
@@ -22,9 +21,10 @@ function load() {
   try {
     saved = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   } catch { /* first run, or unreadable: start from defaults */ }
-  // The old Python launcher stored a single offline name.
-  if (saved.name && !saved.accounts) saved.accounts = [{ type: 'offline', name: saved.name }];
+  // Only Microsoft accounts that own the game can play; drop offline names and settings from earlier versions.
+  saved.accounts = (saved.accounts || []).filter((a) => a.type === 'msa');
   delete saved.name;
+  delete saved.clientId;
   if (typeof saved.ram !== 'number') delete saved.ram;   // it stored RAM as text such as "1G"
   return { ...DEFAULTS, ...saved };
 }

@@ -67,10 +67,10 @@ function renderAccounts() {
   const active = settings.accounts[settings.active];
   $('avatar-img').replaceWith(Object.assign(headImg(active), { id: 'avatar-img' }));
   $('playing').replaceChildren(...(active ? [headImg(active), el('span', {}, 'Playing as ', el('b', { textContent: active.name }))]
-    : [el('span', { textContent: 'Add an account in Settings to play' })]));
+    : [el('span', { textContent: 'Sign in with Microsoft in Settings to play' })]));
   const row = (a, i, removable) => {
     const node = el('div', { className: 'account' + (i === settings.active ? ' selected' : '') }, headImg(a, 'head'),
-      el('div', { className: 'who' }, a.name, el('small', { textContent: a.type === 'msa' ? 'Microsoft account' : 'Offline' })));
+      el('div', { className: 'who' }, a.name, el('small', { textContent: 'Microsoft account' })));
     node.addEventListener('click', async () => {
       settings = await valor.selectAccount(i);
       renderAccounts();
@@ -89,8 +89,6 @@ function renderAccounts() {
   };
   $('account-list').replaceChildren(...settings.accounts.map((a, i) => row(a, i, true)));
   $('popover-list').replaceChildren(...settings.accounts.map((a, i) => row(a, i, false)));
-  $('microsoft').disabled = !settings.clientId;
-  $('microsoft').title = settings.clientId ? '' : 'Add your Azure client ID below first';
 }
 
 $('avatar').addEventListener('click', (e) => {
@@ -111,18 +109,6 @@ function accountError(e) {
   $('account-error').hidden = !e;
 }
 
-$('offline-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  try {
-    settings = await valor.addOffline($('offline-name').value.trim());
-    $('offline-name').value = '';
-    accountError(null);
-    renderAccounts();
-  } catch (err) {
-    accountError(err);
-  }
-});
-
 $('microsoft').addEventListener('click', async () => {
   $('microsoft').disabled = true;
   try {
@@ -131,6 +117,7 @@ $('microsoft').addEventListener('click', async () => {
   } catch (err) {
     accountError(err);
   }
+  $('microsoft').disabled = false;
   renderAccounts();
 });
 
@@ -262,12 +249,9 @@ function bindSettings() {
   }
   $('fullscreen').checked = settings.fullscreen;
   $('fullscreen').addEventListener('change', () => valor.setSettings({ fullscreen: $('fullscreen').checked }));
-  for (const [id, key] of [['java-path', 'javaPath'], ['jvm-args', 'jvmArgs'], ['client-id', 'clientId']]) {
+  for (const [id, key] of [['java-path', 'javaPath'], ['jvm-args', 'jvmArgs']]) {
     $(id).value = settings[key];
-    $(id).addEventListener('change', async () => {
-      settings = await valor.setSettings({ [key]: $(id).value.trim() });
-      renderAccounts();
-    });
+    $(id).addEventListener('change', () => valor.setSettings({ [key]: $(id).value.trim() }));
   }
   const seg = $('after-launch');
   const mark = () => seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.value === settings.afterLaunch));

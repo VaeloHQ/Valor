@@ -158,15 +158,12 @@ input:focus { border-color: var(--primary-hi); box-shadow: 0 0 0 3px rgba(37, 99
 /* Settings */
 .settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 .card { padding: 22px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
-.card.span { grid-column: span 2; }
 .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .field > span, .field label > span { font-size: 12px; font-weight: 600; color: var(--muted); }
 .field i { font-style: normal; color: var(--faint); font-weight: 400; }
 .field b { color: var(--text); }
 .field.row { flex-direction: row; gap: 10px; }
 .field.row label { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.help { font-size: 12px; line-height: 1.6; color: var(--muted); margin-bottom: 16px; }
-.help code { font-size: 11px; }
 .path-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 .path-row code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }

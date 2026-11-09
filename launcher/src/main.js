@@ -42,7 +42,7 @@ function modJar() {
   return jars.length ? path.join(libs, jars.sort().pop()) : null;
 }
 
-const EDITABLE = ['ram', 'width', 'height', 'fullscreen', 'javaPath', 'jvmArgs', 'afterLaunch', 'clientId', 'servers'];
+const EDITABLE = ['ram', 'width', 'height', 'fullscreen', 'javaPath', 'jvmArgs', 'afterLaunch', 'servers'];
 
 ipcMain.handle('settings:get', () => publicSettings());
 ipcMain.handle('settings:set', (e, patch) => {
@@ -52,19 +52,9 @@ ipcMain.handle('settings:set', (e, patch) => {
   return publicSettings();
 });
 
-ipcMain.handle('accounts:addOffline', (e, name) => {
-  if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new Error('Use 3 to 16 letters, numbers or _.');
-  const s = store.get();
-  const accounts = s.accounts.filter((a) => !(a.type === 'offline' && a.name.toLowerCase() === name.toLowerCase()));
-  accounts.push({ type: 'offline', name });
-  store.set({ accounts, active: accounts.length - 1 });
-  return publicSettings();
-});
-
 ipcMain.handle('accounts:addMicrosoft', async () => {
   const s = store.get();
-  if (!s.clientId) throw new Error('Microsoft sign-in needs an Azure client ID. Add it in Settings.');
-  const { account, refresh } = await auth.signIn(win, s.clientId);
+  const { account, refresh } = await auth.signIn(win);
   const accounts = s.accounts.filter((a) => !(a.type === 'msa' && a.uuid === account.uuid));
   accounts.push({ type: 'msa', name: account.name, uuid: account.uuid, refresh: store.seal(refresh) });
   store.set({ accounts, active: accounts.length - 1 });
@@ -83,15 +73,14 @@ ipcMain.handle('accounts:remove', (e, i) => {
   return publicSettings();
 });
 
-/** The account to launch with; Microsoft accounts get a fresh Minecraft token from their stored refresh token. */
+/** The account to launch with, with a fresh Minecraft token from its stored refresh token (only owners of the game can play). */
 async function launchAccount() {
   const s = store.get();
   const a = s.accounts[s.active];
-  if (!a) throw new Error('Add an account first.');
-  if (a.type === 'offline') return { type: 'offline', name: a.name };
+  if (!a) throw new Error('Sign in with your Microsoft account first.');
   const refresh = store.unseal(a.refresh);
-  if (!refresh || !s.clientId) throw new Error('Sign in with Microsoft again.');
-  const r = await auth.refresh(s.clientId, refresh);
+  if (!refresh) throw new Error('Sign in with Microsoft again.');
+  const r = await auth.refresh(refresh);
   a.refresh = store.seal(r.refresh);
   a.name = r.account.name;
   store.save();
@@ -140,5 +129,7 @@ ipcMain.on('window', (e, action) => {
   else if (action === 'close') win.close();
 });
 
+// Electron's own data (cache, sign-in cookies) lives in the Valor folder too, not in AppData.
+app.setPath('userData', path.join(game.ROOT, 'launcher-data'));
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());

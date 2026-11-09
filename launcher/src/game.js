@@ -184,16 +184,8 @@ async function splashOff() {
   await fsp.writeFile(file, text);
 }
 
-/** The UUID vanilla gives an offline player (UUID.nameUUIDFromBytes("OfflinePlayer:" + name)). */
-function offlineUuid(name) {
-  const h = crypto.createHash('md5').update('OfflinePlayer:' + name).digest();
-  h[6] = (h[6] & 0x0f) | 0x30;
-  h[8] = (h[8] & 0x3f) | 0x80;
-  return h.toString('hex');
-}
-
 /**
- * Installs if needed and starts the game. account: { name, uuid, token, type } ('msa' or 'offline').
+ * Installs if needed and starts the game. account: a signed-in Microsoft account { name, uuid, token }.
  * options: { ram (MB), width, height, fullscreen, javaPath, jvmArgs, server: { host, port } }. Returns the child process.
  */
 async function launch(account, options, modJar, progress) {
@@ -204,8 +196,7 @@ async function launch(account, options, modJar, progress) {
   await splashOff();
   const sub = {
     auth_player_name: account.name, version_name: FORGE, game_directory: GAME, assets_root: ASSETS,
-    assets_index_name: ver.assetIndex.id, auth_uuid: account.type === 'msa' ? account.uuid : offlineUuid(account.name),
-    auth_access_token: account.type === 'msa' ? account.token : '0', user_properties: '{}', user_type: account.type === 'msa' ? 'msa' : 'legacy',
+    assets_index_name: ver.assetIndex.id, auth_uuid: account.uuid, auth_access_token: account.token, user_properties: '{}', user_type: 'msa',
   };
   const gameArgs = forge.minecraftArguments.split(' ').map((a) => (a.startsWith('${') ? sub[a.slice(2, -1)] ?? a : a));
   if (options.fullscreen) gameArgs.push('--fullscreen');
@@ -221,4 +212,4 @@ async function launch(account, options, modJar, progress) {
   return child;
 }
 
-module.exports = { launch, ROOT, GAME, offlineUuid };
+module.exports = { launch, ROOT, GAME };

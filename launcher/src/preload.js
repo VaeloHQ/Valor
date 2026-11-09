@@ -4,7 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('valor', {
   settings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
-  addOffline: (name) => ipcRenderer.invoke('accounts:addOffline', name),
   addMicrosoft: () => ipcRenderer.invoke('accounts:addMicrosoft'),
   selectAccount: (i) => ipcRenderer.invoke('accounts:select', i),
   removeAccount: (i) => ipcRenderer.invoke('accounts:remove', i),

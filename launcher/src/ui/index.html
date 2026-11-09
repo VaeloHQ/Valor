@@ -109,20 +109,8 @@
         <div class="card" id="accounts-card">
           <h3>Accounts</h3>
           <div id="account-list"></div>
-          <form class="field row" id="offline-form">
-            <input id="offline-name" placeholder="Offline username" maxlength="16">
-            <button class="ghost" type="submit"><img src="icons/plus.svg" alt="">Add</button>
-          </form>
           <button class="primary wide" id="microsoft"><img src="icons/user.svg" alt="">Sign in with Microsoft</button>
           <div class="error" id="account-error" hidden></div>
-        </div>
-
-        <div class="card span">
-          <h3>Microsoft sign-in</h3>
-          <p class="help">Microsoft accounts need Valor's own Azure app. Register one at portal.azure.com (personal Microsoft accounts,
-            redirect URI <code>https://login.microsoftonline.com/common/oauth2/nativeclient</code> as Mobile and desktop), request Minecraft
-            access with Microsoft's form at aka.ms/mce-reviewappid, then paste the client ID here.</p>
-          <label class="field"><span>Azure client ID</span><input id="client-id" placeholder="00000000-0000-0000-0000-000000000000"></label>
         </div>
       </div>
     </section>

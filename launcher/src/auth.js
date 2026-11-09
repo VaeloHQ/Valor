@@ -1,7 +1,9 @@
 // Microsoft sign-in for Minecraft: Microsoft account -> Xbox Live -> XSTS -> Minecraft services.
-// Needs an Azure app (public client) approved for the Minecraft API; its client ID is set in the launcher settings.
 const { BrowserWindow } = require('electron');
 const crypto = require('crypto');
+
+/** Valor's Azure app (public client, personal Microsoft accounts). A client ID is public, not a secret. */
+const CLIENT_ID = 'f33b6a77-918e-47d4-919c-6d866b6ca339';
 
 const REDIRECT = 'https://login.microsoftonline.com/common/oauth2/nativeclient';
 const SCOPE = 'XboxLive.signin offline_access';
@@ -27,11 +29,11 @@ async function postJson(url, body, headers = {}) {
   return json;
 }
 
-async function msToken(clientId, params) {
+async function msToken(params) {
   const res = await fetch(`${MS}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ client_id: clientId, scope: SCOPE, redirect_uri: REDIRECT, ...params }),
+    body: new URLSearchParams({ client_id: CLIENT_ID, scope: SCOPE, redirect_uri: REDIRECT, ...params }),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error_description || 'Microsoft sign-in failed.');
@@ -39,7 +41,7 @@ async function msToken(clientId, params) {
 }
 
 /** Opens Microsoft's sign-in page in a window and resolves with the authorization code (PKCE). */
-function interactiveCode(parent, clientId, challenge) {
+function interactiveCode(parent, challenge) {
   return new Promise((resolve, reject) => {
     const win = new BrowserWindow({ width: 500, height: 640, parent, modal: true, autoHideMenuBar: true, title: 'Sign in with Microsoft',
       webPreferences: { partition: 'auth', contextIsolation: true, nodeIntegration: false } });
@@ -47,7 +49,7 @@ function interactiveCode(parent, clientId, challenge) {
     const finish = (fn, value) => {
       if (settled) return;
       settled = true;
-      win.destroy();
+      if (!win.isDestroyed()) win.destroy();
       fn(value);
     };
     const check = (url) => {
@@ -58,10 +60,13 @@ function interactiveCode(parent, clientId, challenge) {
     };
     win.webContents.on('will-redirect', (e, url) => check(url));
     win.webContents.on('will-navigate', (e, url) => check(url));
+    win.webContents.on('did-fail-load', (e, code, text, url, mainFrame) => {
+      if (mainFrame && code !== -3) finish(reject, new Error("Couldn't reach Microsoft. Check your internet connection."));   // -3: aborted
+    });
     win.on('closed', () => finish(reject, new Error('Sign-in was cancelled.')));
-    const q = new URLSearchParams({ client_id: clientId, response_type: 'code', redirect_uri: REDIRECT, scope: SCOPE,
+    const q = new URLSearchParams({ client_id: CLIENT_ID, response_type: 'code', redirect_uri: REDIRECT, scope: SCOPE,
       code_challenge: challenge, code_challenge_method: 'S256', prompt: 'select_account' });
-    win.loadURL(`${MS}/authorize?${q}`);
+    win.loadURL(`${MS}/authorize?${q}`).catch(() => { /* reported by did-fail-load */ });
   });
 }
 
@@ -88,7 +93,14 @@ async function minecraft(msAccess) {
     throw new Error((e.body && XSTS_ERRORS[e.body.XErr]) || 'Xbox Live sign-in failed.');
   }
   const uhs = xsts.DisplayClaims.xui[0].uhs;
-  const mc = await postJson('https://api.minecraftservices.com/authentication/login_with_xbox', { identityToken: `XBL3.0 x=${uhs};${xsts.Token}` });
+  let mc;
+  try {
+    mc = await postJson('https://api.minecraftservices.com/authentication/login_with_xbox', { identityToken: `XBL3.0 x=${uhs};${xsts.Token}` });
+  } catch (e) {
+    // Minecraft refuses apps Microsoft hasn't approved yet with 403.
+    throw new Error(e.status === 403 ? 'Valor is waiting for Microsoft to approve it for Minecraft sign-in. Try again later.'
+      : 'Minecraft sign-in failed. Try again in a moment.');
+  }
   const res = await fetch('https://api.minecraftservices.com/minecraft/profile', { headers: { Authorization: `Bearer ${mc.access_token}` } });
   if (res.status === 404) throw new Error("This Microsoft account doesn't own Minecraft: Java Edition.");
   if (!res.ok) throw new Error('Couldn\'t load the Minecraft profile.');
@@ -97,17 +109,17 @@ async function minecraft(msAccess) {
 }
 
 /** Full sign-in with a window. Returns the account plus the Microsoft refresh token to keep. */
-async function signIn(parent, clientId) {
+async function signIn(parent) {
   const verifier = base64url(crypto.randomBytes(32));
   const challenge = base64url(crypto.createHash('sha256').update(verifier).digest());
-  const code = await interactiveCode(parent, clientId, challenge);
-  const ms = await msToken(clientId, { grant_type: 'authorization_code', code, code_verifier: verifier });
+  const code = await interactiveCode(parent, challenge);
+  const ms = await msToken({ grant_type: 'authorization_code', code, code_verifier: verifier });
   return { account: await minecraft(ms.access_token), refresh: ms.refresh_token };
 }
 
 /** Silent refresh from a stored Microsoft refresh token (Minecraft tokens last a day). */
-async function refresh(clientId, refreshToken) {
-  const ms = await msToken(clientId, { grant_type: 'refresh_token', refresh_token: refreshToken });
+async function refresh(refreshToken) {
+  const ms = await msToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
   return { account: await minecraft(ms.access_token), refresh: ms.refresh_token || refreshToken };
 }
 
