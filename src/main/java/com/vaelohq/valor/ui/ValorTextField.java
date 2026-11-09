@@ -12,6 +12,7 @@ final class ValorTextField {
     float x, y, w, h;
     String text = "";
     boolean focused, reveal, error;
+    int max = 64;
     private int caret;
     private boolean all;
     private long typed;
@@ -112,7 +113,7 @@ final class ValorTextField {
         for (char ch : s.toCharArray()) if (ChatAllowedCharacters.isAllowedCharacter(ch)) ok.append(ch);
         if (all) clear();
         String t = text.substring(0, caret) + ok + text.substring(caret);
-        if (t.length() > 64) return;
+        if (t.length() > max) return;
         text = t;
         caret += ok.length();
     }

@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GLContext;
 
 /**
  * Anti-aliased rounded rectangles with a vertical gradient fill, a border and a soft drop shadow,
- * drawn by one signed-distance-field shader. Without GL 2.0 it falls back to a plain rectangle.
+ * drawn by one signed-distance-field shader, plus rounded images. Without GL 2.0 they fall back to plain rectangles.
  */
 public final class Shapes {
     private static final String VERT = "#version 120\n"
@@ -24,9 +24,13 @@ public final class Shapes {
             + " float s=blur>0.?shadow.a*(1.-smoothstep(-blur,blur,sd(p-off)))*(1.-a):0.;\n"
             + " float o=c.a+s*(1.-c.a);\n"
             + " gl_FragColor=vec4((c.rgb*c.a+shadow.rgb*s*(1.-c.a))/max(o,1e-4),o);}";
+    private static final String IMAGE = "#version 120\n"
+            + "uniform vec2 hs; uniform float radius, px, alpha; uniform sampler2D tex; varying vec2 p;\n"
+            + "float sd(vec2 q){vec2 d=abs(q)-hs+radius; return length(max(d,0.))+min(max(d.x,d.y),0.)-radius;}\n"
+            + "void main(){vec4 c=texture2D(tex,p/(hs*2.)+.5); c.a*=alpha*clamp(.5-sd(p)/px,0.,1.); gl_FragColor=c;}";
     /** One real screen pixel in GUI units; set each frame by ValorScreen. */
     static float px = 0.5f;
-    private static int program = -1;
+    private static int program = -1, image = -1;
 
     /** Rounded rectangle with a flat fill. */
     public static void round(float x, float y, float w, float h, float r, int fill) {
@@ -60,6 +64,29 @@ public final class Shapes {
         color4("shadow", shadow);
         GlStateManager.disableAlpha();
         Ui.rect(x - m, y - m, x + w + m, y + h + m, 0xFFFFFFFF);
+        GlStateManager.enableAlpha();
+        GL20.glUseProgram(0);
+    }
+
+    /** Draws the texture bound to unit 0 over the whole rectangle, with anti-aliased rounded corners. */
+    public static void image(float x, float y, float w, float h, float r, float alpha) {
+        if (image == -1) image = compile(VERT, IMAGE, "Image");
+        if (image == 0) {
+            GlStateManager.enableBlend();
+            GlStateManager.color(1, 1, 1, alpha);
+            net.minecraft.client.gui.Gui.drawModalRectWithCustomSizedTexture(Math.round(x), Math.round(y), 0, 0, Math.round(w), Math.round(h), w, h);
+            GlStateManager.color(1, 1, 1, 1);
+            return;
+        }
+        GL20.glUseProgram(image);
+        GL20.glUniform2f(GL20.glGetUniformLocation(image, "center"), x + w / 2, y + h / 2);
+        GL20.glUniform2f(GL20.glGetUniformLocation(image, "hs"), w / 2, h / 2);
+        GL20.glUniform1f(GL20.glGetUniformLocation(image, "radius"), Math.min(r, Math.min(w, h) / 2));
+        GL20.glUniform1f(GL20.glGetUniformLocation(image, "px"), px);
+        GL20.glUniform1f(GL20.glGetUniformLocation(image, "alpha"), alpha);
+        GL20.glUniform1i(GL20.glGetUniformLocation(image, "tex"), 0);
+        GlStateManager.disableAlpha();
+        Ui.rect(x, y, x + w, y + h, 0xFFFFFFFF);
         GlStateManager.enableAlpha();
         GL20.glUseProgram(0);
     }

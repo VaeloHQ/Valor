@@ -1,5 +1,6 @@
 package com.vaelohq.valor.mixin;
 
+import com.vaelohq.valor.ui.MultiplayerScreen;
 import com.vaelohq.valor.ui.Ui;
 import com.vaelohq.valor.ui.Widgets;
 import net.minecraft.client.gui.GuiButton;
@@ -36,7 +37,7 @@ public abstract class MixinGuiDisconnected extends GuiScreen {
         valor$lines = Ui.regular().wrap(text, 6, Math.min(width - 40, 280));
         float y = height / 2f + valor$lines.size() * 9 / 2f + 14;
         buttonList.clear();
-        String back = parentScreen instanceof GuiMultiplayer ? "Back to server list" : "Back to title screen";
+        String back = parentScreen instanceof GuiMultiplayer || parentScreen instanceof MultiplayerScreen ? "Back to server list" : "Back to title screen";
         buttonList.add(new Widgets.Pill(0, width / 2f - 65, y, 130, 16, 8, -1, back, true, 0));
     }
 

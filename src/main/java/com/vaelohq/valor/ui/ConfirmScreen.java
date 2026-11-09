@@ -39,6 +39,7 @@ public class ConfirmScreen extends ValorScreen {
     @Override
     public void initGui() {
         super.initGui();
+        if (behind != null) behind.setWorldAndResolution(mc, width, height);   // keep the screen underneath laid out for this size
         pw = 190;
         lines = Ui.regular().wrap(message, 5.6f, pw - 32);
         ph = 34 + (message.isEmpty() ? 0 : lines.size() * 8 + 6) + 16 + 16;
@@ -61,9 +62,7 @@ public class ConfirmScreen extends ValorScreen {
     @Override
     protected void drawContent(int mouseX, int mouseY) {
         float a = Ui.ease(time() / 0.3f), y = py + (1 - a) * 5;
-        Ui.rect(0, 0, width, height, Ui.alpha(0x66000000, a));
-        Shapes.draw(px, y, pw, ph, 8, Ui.alpha(0xF5101426, a), Ui.alpha(0xF50C1430, a), Ui.alpha(0x40FFFFFF, a), 0.5f,
-                Ui.alpha(0xAA000000, a), 12, 4);
+        Ui.dialog(width, height, px, y, pw, ph, a);
         Ui.semibold().drawCentered(title, px + pw / 2, y + 14, 8, Ui.alpha(Ui.TEXT, a));
         float ly = y + 30;
         if (!message.isEmpty()) for (String l : lines) {

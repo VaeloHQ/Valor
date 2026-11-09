@@ -3,7 +3,6 @@ package com.vaelohq.valor.ui;
 import com.vaelohq.valor.Recent;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiLanguage;
-import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.gui.GuiWinGame;
@@ -89,7 +88,7 @@ public class MainMenuScreen extends ValorScreen {
     @Override
     protected void actionPerformed(GuiButton b) {
         switch (b.id) {
-            case MULTI: mc.displayGuiScreen(new GuiMultiplayer(this)); break;
+            case MULTI: mc.displayGuiScreen(new MultiplayerScreen(this)); break;
             case SINGLE: mc.displayGuiScreen(new GuiSelectWorld(this)); break;
             case ACCOUNT: mc.displayGuiScreen(new AccountScreen(this, false)); break;
             case CONTINUE: resume(); break;
@@ -104,7 +103,7 @@ public class MainMenuScreen extends ValorScreen {
     }
 
     private void resume() {
-        if (!Recent.has()) mc.displayGuiScreen(new GuiMultiplayer(this));
+        if (!Recent.has()) mc.displayGuiScreen(new MultiplayerScreen(this));
         else if (Recent.world) FMLClientHandler.instance().tryLoadExistingWorld(new GuiSelectWorld(this), Recent.target, Recent.name);
         else mc.displayGuiScreen(new GuiConnecting(this, mc, new ServerData(Recent.name, Recent.target, false)));
     }

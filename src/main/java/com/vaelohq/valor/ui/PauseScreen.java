@@ -2,7 +2,6 @@ package com.vaelohq.valor.ui;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiShareToLan;
 import net.minecraft.client.gui.achievement.GuiAchievements;
@@ -51,7 +50,7 @@ public class PauseScreen extends ValorScreen {
                 mc.loadWorld(null);
                 if (integrated) mc.displayGuiScreen(new GuiMainMenu());
                 else if (realms) new RealmsBridge().switchToRealms(new GuiMainMenu());
-                else mc.displayGuiScreen(new GuiMultiplayer(new GuiMainMenu()));
+                else mc.displayGuiScreen(new MultiplayerScreen(new GuiMainMenu()));
                 break;
             case BACK:
                 mc.displayGuiScreen(null);
