@@ -41,6 +41,55 @@ public final class Ui {
         return bold != null ? bold : (bold = new ValorFont("Inter-Bold.ttf", 64, 88, 8, 126));
     }
 
+    /** Call once per frame before drawing shapes (sets the shape shader's pixel size). */
+    public static void frame() {
+        Shapes.px = 1f / new net.minecraft.client.gui.ScaledResolution(net.minecraft.client.Minecraft.getMinecraft()).getScaleFactor();
+    }
+
+    /** The menu background: animated blue light out of game, a dark veil over the world in game. */
+    public static void background(float w, float h) {
+        if (net.minecraft.client.Minecraft.getMinecraft().theWorld != null) {
+            GlStateManager.shadeModel(GL11.GL_SMOOTH);
+            gradient(0, 0, w, h, 0xB8060A1A, 0xD8040712);
+            GlStateManager.shadeModel(GL11.GL_FLAT);
+        } else Background.draw(w, h);
+    }
+
+    /** The animated blue-light background, regardless of whether a world is loaded. */
+    public static void menuBackground(float w, float h) {
+        Background.draw(w, h);
+    }
+
+    /** Vertical gradient rectangle. */
+    public static void gradient(float x1, float y1, float x2, float y2, int top, int bottom) {
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableAlpha();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.shadeModel(GL11.GL_SMOOTH);
+        WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();
+        wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        wr.pos(x1, y2, 0).color(bottom >> 16 & 255, bottom >> 8 & 255, bottom & 255, bottom >>> 24).endVertex();
+        wr.pos(x2, y2, 0).color(bottom >> 16 & 255, bottom >> 8 & 255, bottom & 255, bottom >>> 24).endVertex();
+        wr.pos(x2, y1, 0).color(top >> 16 & 255, top >> 8 & 255, top & 255, top >>> 24).endVertex();
+        wr.pos(x1, y1, 0).color(top >> 16 & 255, top >> 8 & 255, top & 255, top >>> 24).endVertex();
+        Tessellator.getInstance().draw();
+        GlStateManager.shadeModel(GL11.GL_FLAT);
+        GlStateManager.enableAlpha();
+        GlStateManager.enableTexture2D();
+    }
+
+    /** Eight dots chasing round a circle. */
+    public static void spinner(float cx, float cy, float r, float alpha) {
+        double t = net.minecraft.client.Minecraft.getSystemTime() / 110.0;
+        for (int i = 0; i < 8; i++) {
+            double ang = i * Math.PI / 4;
+            float k = (float) (((i - t) % 8 + 8) % 8) / 8f, d = r * 0.22f;
+            Shapes.round(cx + (float) Math.cos(ang) * r - d / 2, cy + (float) Math.sin(ang) * r - d / 2, d, d, d / 2,
+                    alpha(mix(PRIMARY_HI, 0x334C85FF, k), alpha));
+        }
+    }
+
     /** Frees fonts, textures and shaders. Called when the player enters a world. */
     public static void release() {
         for (ValorFont f : new ValorFont[]{regular, semibold, bold}) if (f != null) f.delete();

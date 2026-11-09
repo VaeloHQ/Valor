@@ -2,7 +2,6 @@ package com.vaelohq.valor.ui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 
 /** Base for Valor screens: animated background, fade-in on open, and a toast pill. */
 public abstract class ValorScreen extends GuiScreen {
@@ -22,14 +21,14 @@ public abstract class ValorScreen extends GuiScreen {
     }
 
     protected void drawBackground() {
-        Background.draw(width, height);
+        Ui.background(width, height);
     }
 
     protected abstract void drawContent(int mouseX, int mouseY);
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        Shapes.px = 1f / new ScaledResolution(mc).getScaleFactor();
+        Ui.frame();
         drawBackground();
         drawContent(mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);

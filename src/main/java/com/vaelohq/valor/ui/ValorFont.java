@@ -97,6 +97,33 @@ public final class ValorFont {
         wr.pos(x, y, 0).tex(u, v).color(argb >> 16 & 255, argb >> 8 & 255, argb & 255, argb >>> 24).endVertex();
     }
 
+    /** Splits text into lines no wider than maxWidth (breaking at spaces; long words are cut). */
+    public java.util.List<String> wrap(String text, float size, float maxWidth) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        for (String para : text.split("\n")) {
+            StringBuilder line = new StringBuilder();
+            for (String word : para.split(" ")) {
+                String tryLine = line.length() == 0 ? word : line + " " + word;
+                if (width(tryLine, size) <= maxWidth) {
+                    line.setLength(0);
+                    line.append(tryLine);
+                    continue;
+                }
+                if (line.length() > 0) lines.add(line.toString());
+                line.setLength(0);
+                while (width(word, size) > maxWidth && word.length() > 1) {
+                    int n = word.length();
+                    while (n > 1 && width(word.substring(0, n), size) > maxWidth) n--;
+                    lines.add(word.substring(0, n));
+                    word = word.substring(n);
+                }
+                line.append(word);
+            }
+            lines.add(line.toString());
+        }
+        return lines;
+    }
+
     public void drawCentered(String s, float cx, float y, float size, int argb) {
         draw(s, cx - width(s, size) / 2, y, size, argb, argb);
     }

@@ -1,9 +1,13 @@
 package com.vaelohq.valor;
 
+import com.vaelohq.valor.ui.DeathScreen;
 import com.vaelohq.valor.ui.IntroScreen;
 import com.vaelohq.valor.ui.MainMenuScreen;
+import com.vaelohq.valor.ui.PauseScreen;
 import com.vaelohq.valor.ui.Ui;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGameOver;
+import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -40,6 +44,10 @@ public class Valor {
             // First title screen of the launch: intro, then the account panel, then the menu.
             e.gui = introShown ? new MainMenuScreen() : new IntroScreen();
             introShown = true;
+        } else if (e.gui instanceof GuiIngameMenu) {
+            e.gui = new PauseScreen();
+        } else if (e.gui instanceof GuiGameOver) {
+            e.gui = new DeathScreen();
         } else if (e.gui == null && mc.theWorld != null) {
             Ui.release(); // back in game: menu fonts, textures and shaders cost nothing while playing
             if (mc.theWorld != recorded.get()) {

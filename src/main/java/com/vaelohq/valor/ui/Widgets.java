@@ -4,11 +4,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
 /** Menu controls. Each eases in after showAt, animates hover in about 150 ms, and shows a cyan ring when keyboard-focused. */
-final class Widgets {
+public final class Widgets {
     private Widgets() {
     }
 
-    abstract static class Base extends GuiButton {
+    public abstract static class Base extends GuiButton {
         final long showAt;
         float hover;
         boolean focused;
@@ -27,9 +27,9 @@ final class Widgets {
         public void drawButton(Minecraft mc, int mx, int my) {
             if (!visible) return;
             hovered = mx >= xPosition && my >= yPosition && mx < xPosition + width && my < yPosition + height;
-            hover = Ui.approach(hover, hovered || focused ? 1 : 0);
+            hover = Ui.approach(hover, enabled && (hovered || focused) ? 1 : 0);
             float k = enter();
-            if (k > 0) paint(yPosition + (1 - k) * 5, k);
+            if (k > 0) paint(yPosition + (1 - k) * 5, k * (enabled ? 1 : 0.4f));
         }
 
         abstract void paint(float y, float a);
@@ -40,16 +40,22 @@ final class Widgets {
     }
 
     /** Icon + label pill. Primary is filled blue; the others are dark glass. */
-    static class Pill extends Base {
+    public static class Pill extends Base {
         final int icon;
         final boolean primary;
         final float radius;
+        boolean danger;
 
-        Pill(int id, float x, float y, float w, float h, float radius, int icon, String label, boolean primary, long showAt) {
+        public Pill(int id, float x, float y, float w, float h, float radius, int icon, String label, boolean primary, long showAt) {
             super(id, x, y, w, h, label, showAt);
             this.icon = icon;
             this.primary = primary;
             this.radius = radius;
+        }
+
+        public Pill danger() {
+            danger = true;
+            return this;
         }
 
         @Override
@@ -69,18 +75,18 @@ final class Widgets {
             ValorFont f = Ui.semibold();
             float size = h * 0.38f, is = h * 0.38f, gap = icon >= 0 ? h * 0.26f : 0;
             float tw = f.width(displayString, size) + (icon >= 0 ? is + gap : 0), x = xPosition + (width - tw) / 2;
-            int c = Ui.alpha(Ui.TEXT, a);
+            int c = Ui.alpha(danger ? 0xFFFF8F9C : Ui.TEXT, a);
             if (icon >= 0) Ui.icon(icon, x, y + (h - is) / 2, is, c);
             f.draw(displayString, x + (icon >= 0 ? is + gap : 0), y + (h - size * 1.2f) / 2, size, c);
         }
     }
 
     /** Square icon button for the dock, with a hover highlight and a label above it. */
-    static class DockIcon extends Base {
+    public static class DockIcon extends Base {
         final int icon;
         final boolean dim;
 
-        DockIcon(int id, float x, float y, float size, int icon, String label, boolean dim, long showAt) {
+        public DockIcon(int id, float x, float y, float size, int icon, String label, boolean dim, long showAt) {
             super(id, x, y, size, size, label, showAt);
             this.icon = icon;
             this.dim = dim;
@@ -105,11 +111,11 @@ final class Widgets {
     }
 
     /** "Continue" card for the last server or world. */
-    static class Card extends Base {
+    public static class Card extends Base {
         String title, sub;
         boolean empty;
 
-        Card(int id, float x, float y, float w, float h, long showAt) {
+        public Card(int id, float x, float y, float w, float h, long showAt) {
             super(id, x, y, w, h, "", showAt);
         }
 
@@ -137,11 +143,11 @@ final class Widgets {
     }
 
     /** Small text link. */
-    static class Link extends Base {
+    public static class Link extends Base {
         final float size;
         final int color;
 
-        Link(int id, float x, float y, String text, float size, int color, long showAt) {
+        public Link(int id, float x, float y, String text, float size, int color, long showAt) {
             super(id, x, y, Ui.regular().width(text, size), size * 1.3f, text, showAt);
             this.size = size;
             this.color = color;
