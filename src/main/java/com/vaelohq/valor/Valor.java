@@ -1,5 +1,6 @@
 package com.vaelohq.valor;
 
+import com.vaelohq.valor.style.ValorPack;
 import com.vaelohq.valor.ui.DeathScreen;
 import com.vaelohq.valor.ui.IntroScreen;
 import com.vaelohq.valor.ui.MainMenuScreen;
@@ -14,6 +15,7 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +33,16 @@ public class Valor {
     private WeakReference<WorldClient> recorded = new WeakReference<>(null);
 
     @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        Config.load();
+        ValorPack.register();
+    }
+
+    @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(this);
+        ValorPack.watchReloads();
+        MinecraftForge.EVENT_BUS.register(new com.vaelohq.valor.style.Hud());
         Account.restore();
         LOGGER.info("{} {} loaded", NAME, VERSION);
     }

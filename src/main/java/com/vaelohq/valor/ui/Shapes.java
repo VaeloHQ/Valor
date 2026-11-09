@@ -72,11 +72,6 @@ public final class Shapes {
         GL20.glUniform4f(loc(name), (argb >> 16 & 255) / 255f, (argb >> 8 & 255) / 255f, (argb & 255) / 255f, (argb >>> 24) / 255f);
     }
 
-    static void release() {
-        if (program > 0) GL20.glDeleteProgram(program);
-        program = -1;
-    }
-
     /** Compiles a vertex + fragment program; returns 0 when shaders are unavailable or fail. */
     static int compile(String vert, String frag, String what) {
         if (!GLContext.getCapabilities().OpenGL20) return 0;

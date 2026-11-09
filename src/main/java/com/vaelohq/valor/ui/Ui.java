@@ -97,8 +97,7 @@ public final class Ui {
         if (logo != -1) TextureUtil.deleteTexture(logo);
         if (icons != -1) TextureUtil.deleteTexture(icons);
         logo = icons = -1;
-        Background.release();
-        Shapes.release();
+        Background.release();   // the small shape shader stays: the in-game HUD and buttons use it
     }
 
     public static void logo(float x, float y, float size, float alpha) {
