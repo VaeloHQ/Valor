@@ -169,21 +169,37 @@ public final class Widgets {
 
         @Override
         void paint(float y, float a) {
-            float h = height, r = h / 2;
-            Shapes.draw(xPosition, y, width, h, r, Ui.alpha(Ui.mix(0xB4141A30, 0xD01B2340, hover), a),
-                    Ui.alpha(Ui.mix(0xB40A0F20, 0xD0111933, hover), a), Ui.alpha(Ui.mix(0x1FFFFFFF, 0x38FFFFFF, hover), a), 0.5f,
-                    Ui.alpha(0x55000000, a), 4, 1.5f);
-            ring(y, r, a);
-            float size = h * 0.31f, ty = y + (h - size * 1.2f) / 2, pad = r * 0.9f;
-            Ui.regular().draw(displayString, xPosition + pad, ty, size, Ui.alpha(Ui.mix(0xFFC9D2E8, Ui.TEXT, hover), a));
+            float h = height, pad = drawRow(xPosition, y, width, h, displayString, hover, a);
+            ring(y, h / 2, a);
             if (on != null) {
                 knob = knob < 0 ? (on ? 1 : 0) : Ui.approach(knob, on ? 1 : 0);
                 drawSwitch(xPosition + width - pad - 18, y + (h - 9) / 2, knob, a);
-            } else if (value != null) {
-                ValorFont f = Ui.semibold();
-                f.draw(value, xPosition + width - pad - f.width(value, size), ty, size, Ui.alpha(0xFF8FB4FF, a));
-            }
+            } else if (value != null) drawValue(value, xPosition + width - pad, y, h, a);
         }
+    }
+
+    /** Pill-shaped settings row with its label; returns the side padding used, for placing controls on the right. */
+    public static float drawRow(float x, float y, float w, float h, String label, float hover, float a) {
+        float r = h / 2, size = h * 0.31f, pad = r * 0.9f;
+        Shapes.draw(x, y, w, h, r, Ui.alpha(Ui.mix(0xB4141A30, 0xD01B2340, hover), a), Ui.alpha(Ui.mix(0xB40A0F20, 0xD0111933, hover), a),
+                Ui.alpha(Ui.mix(0x1FFFFFFF, 0x38FFFFFF, hover), a), 0.5f, Ui.alpha(0x55000000, a), 4, 1.5f);
+        Ui.regular().draw(label, x + pad, y + (h - size * 1.2f) / 2, size, Ui.alpha(Ui.mix(0xFFC9D2E8, Ui.TEXT, hover), a));
+        return pad;
+    }
+
+    /** A row's current value, right-aligned at right. */
+    public static void drawValue(String value, float right, float y, float h, float a) {
+        ValorFont f = Ui.semibold();
+        float size = h * 0.31f;
+        f.draw(value, right - f.width(value, size), y + (h - size * 1.2f) / 2, size, Ui.alpha(0xFF8FB4FF, a));
+    }
+
+    /** Slider track of width w centred on cy, filled up to v (0..1), with a round knob. */
+    public static void drawSlider(float x, float cy, float w, float v, float hover, float a) {
+        Shapes.round(x, cy - 1.75f, w, 3.5f, 1.75f, Ui.alpha(0xFF2A2F42, a));
+        Shapes.round(x, cy - 1.75f, Math.max(3.5f, w * v), 3.5f, 1.75f, Ui.alpha(Ui.PRIMARY, a));
+        float k = 7 + hover;
+        Shapes.draw(x + w * v - k / 2, cy - k / 2, k, k, k / 2, Ui.alpha(0xFFFFFFFF, a), Ui.alpha(0xFFE6EBF7, a), 0, 0, Ui.alpha(0x66000000, a), 1.5f, 0.6f);
     }
 
     /** Small text link. */

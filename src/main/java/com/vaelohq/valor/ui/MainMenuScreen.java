@@ -3,7 +3,6 @@ package com.vaelohq.valor.ui;
 import com.vaelohq.valor.Recent;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiLanguage;
-import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.multiplayer.GuiConnecting;
@@ -92,7 +91,7 @@ public class MainMenuScreen extends ValorScreen {
             case SINGLE: mc.displayGuiScreen(new SingleplayerScreen(this)); break;
             case ACCOUNT: mc.displayGuiScreen(new AccountScreen(this, false)); break;
             case CONTINUE: resume(); break;
-            case SETTINGS: mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings)); break;
+            case SETTINGS: mc.displayGuiScreen(new OptionsScreen(this)); break;
             case MODS:
             case SOON_A:
             case SOON_B: toast("Coming soon"); break;

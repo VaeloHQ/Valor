@@ -6,9 +6,11 @@ import com.vaelohq.valor.ui.DeathScreen;
 import com.vaelohq.valor.ui.IntroScreen;
 import com.vaelohq.valor.mixin.GuiCreateWorldAccessor;
 import com.vaelohq.valor.mixin.GuiMultiplayerAccessor;
+import com.vaelohq.valor.mixin.GuiOptionsAccessor;
 import com.vaelohq.valor.mixin.GuiSelectWorldAccessor;
 import com.vaelohq.valor.ui.MainMenuScreen;
 import com.vaelohq.valor.ui.MultiplayerScreen;
+import com.vaelohq.valor.ui.OptionsScreen;
 import com.vaelohq.valor.ui.PauseScreen;
 import com.vaelohq.valor.ui.SingleplayerScreen;
 import com.vaelohq.valor.ui.Ui;
@@ -18,6 +20,7 @@ import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
+import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSelectWorld;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -74,6 +77,8 @@ public class Valor {
             // The world list hands FML a GuiSelectWorld wrapping itself; showing that again means going back to it.
             GuiScreen parent = ((GuiSelectWorldAccessor) e.gui).valor$parent();
             e.gui = parent instanceof SingleplayerScreen ? parent : new SingleplayerScreen(parent);
+        } else if (e.gui instanceof GuiOptions) {
+            e.gui = new OptionsScreen(((GuiOptionsAccessor) e.gui).valor$parent());
         } else if (e.gui instanceof GuiCreateWorld) {
             CreateWorldScreen back = CreateWorldScreen.returnFrom((GuiCreateWorld) e.gui);
             e.gui = back != null ? back : new CreateWorldScreen(((GuiCreateWorldAccessor) e.gui).valor$parent());

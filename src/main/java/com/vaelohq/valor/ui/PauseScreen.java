@@ -2,7 +2,6 @@ package com.vaelohq.valor.ui;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiShareToLan;
 import net.minecraft.client.gui.achievement.GuiAchievements;
 import net.minecraft.client.gui.achievement.GuiStats;
@@ -42,7 +41,7 @@ public class PauseScreen extends ValorScreen {
     @Override
     protected void actionPerformed(GuiButton button) {
         switch (button.id) {
-            case OPTIONS: mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings)); break;
+            case OPTIONS: mc.displayGuiScreen(new OptionsScreen(this)); break;
             case QUIT:
                 boolean integrated = mc.isIntegratedServerRunning(), realms = mc.isConnectedToRealms();
                 button.enabled = false;
