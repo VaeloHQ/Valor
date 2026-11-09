@@ -38,6 +38,7 @@ final class ValorTextField {
     }
 
     void draw(float a) {
+        caret = Math.min(caret, text.length()); // text may be replaced from outside (e.g. cleared on a mode switch)
         int border = error ? Ui.DANGER : focused ? Ui.PRIMARY_HI : 0x1FFFFFFF;
         Shapes.draw(x, y, w, h, 3, Ui.alpha(0xFF161925, a), Ui.alpha(0xFF12141E, a), Ui.alpha(border, a), focused || error ? 0.8f : 0.5f,
                 focused ? Ui.alpha(0x552563FF, a) : 0, focused ? 4 : 0, 0);
@@ -65,6 +66,7 @@ final class ValorTextField {
     }
 
     void key(char c, int key) {
+        caret = Math.min(caret, text.length());
         typed = Minecraft.getSystemTime();
         error = false;
         if (GuiScreen.isKeyComboCtrlA(key)) {

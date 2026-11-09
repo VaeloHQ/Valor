@@ -20,8 +20,9 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
- * Valor accounts on Supabase Auth: sign up (with email confirmation), log in, resend confirmation, log out, and an
- * optional remembered session. Network calls run on one background thread; callbacks run on the game thread.
+ * Valor accounts on Supabase Auth with username + password only. Supabase needs an email per account, so each
+ * username maps to a placeholder address players never see. Its domain has no mail server (no MX records), so no one
+ * can receive mail there, which keeps password-reset links from ever reaching a stranger. Network calls run on one background thread; callbacks run on the game thread.
  */
 public final class Account {
     private static final String URL = "https://xwcqvmcrukxkhdhqftcg.supabase.co";
@@ -33,17 +34,18 @@ public final class Account {
         return t;
     });
 
-    public static String username, email;
+    /** Placeholder address domain. Supabase rejects reserved/test domains, so this is under the org's github.io name. */
+    private static final String DOMAIN = "@players.vaelohq.github.io";
+    public static String username;
     private static String access, refresh;
 
-    /** Result of a request: ok, or a message to show the player. needsConfirm marks "email not confirmed". */
+    /** Result of a request: ok, or a message to show the player. */
     public static final class Result {
-        public final boolean ok, needsConfirm;
+        public final boolean ok;
         public final String message;
 
-        Result(boolean ok, boolean needsConfirm, String message) {
+        Result(boolean ok, String message) {
             this.ok = ok;
-            this.needsConfirm = needsConfirm;
             this.message = message;
         }
     }
@@ -52,50 +54,64 @@ public final class Account {
         return access != null;
     }
 
-    /** Checks the name is free, then creates the account. Supabase emails a confirmation link. */
-    public static void signUp(String name, String mail, String password, Consumer<Result> done) {
+    private static String mail(String name) {
+        return name.toLowerCase() + DOMAIN;
+    }
+
+    /** Whether a username is free: true, false, or null if the server couldn't be reached. */
+    public static void available(String name, Consumer<Boolean> done) {
+        NET.execute(() -> {
+            Boolean free = null;
+            try {
+                Response r = post("/rest/v1/rpc/username_available", obj("name", name), null);
+                if (r.code == 200) free = "true".equals(r.raw.trim());
+            } catch (Exception e) {
+                Valor.LOGGER.warn("Username check failed", e);
+            }
+            Boolean f = free;
+            Minecraft.getMinecraft().addScheduledTask(() -> done.accept(f));
+        });
+    }
+
+    /** Checks the name is free, then creates the account and signs in. */
+    public static void signUp(String name, String password, boolean remember, Consumer<Result> done) {
         run(done, () -> {
+            // With "Confirm email" on, Supabase would create an unconfirmed account that can never sign in.
+            Response settings = request("GET", "/auth/v1/settings", null, null);
+            if (settings.json == null || !settings.json.has("mailer_autoconfirm") || !settings.json.get("mailer_autoconfirm").getAsBoolean()) {
+                Valor.LOGGER.error("Sign up blocked: turn off 'Confirm email' in Supabase Auth settings");
+                return fail("Sign up isn't open yet. Try again later.");
+            }
             Response r = post("/rest/v1/rpc/username_available", obj("name", name), null);
             if (r.code == 200 && "false".equals(r.raw.trim())) return fail("That username is taken.");
-            JsonObject body = obj("email", mail);
+            JsonObject body = obj("email", mail(name));
             body.addProperty("password", password);
             body.add("data", obj("username", name));
             r = post("/auth/v1/signup", body, null);
             if (r.code != 200) return fail(error(r));
-            if (r.json != null && r.json.has("access_token")) {
-                session(r.json, false);
-                return new Result(true, false, "Account created. You're signed in.");
-            }
-            return new Result(true, false, "Check " + mail + " for a confirmation link, then log in.");
-        });
-    }
-
-    public static void logIn(String mail, String password, boolean remember, Consumer<Result> done) {
-        run(done, () -> {
-            JsonObject body = obj("email", mail);
-            body.addProperty("password", password);
-            Response r = post("/auth/v1/token?grant_type=password", body, null);
-            if (r.code != 200) {
-                boolean confirm = "email_not_confirmed".equals(field(r, "error_code"));
-                return new Result(false, confirm, error(r));
+            if (r.json == null || !r.json.has("access_token")) {
+                Valor.LOGGER.error("Sign up returned no session: turn off 'Confirm email' in Supabase Auth settings");
+                return fail("Sign up isn't available right now. Try again later.");
             }
             session(r.json, remember);
-            return new Result(true, false, "Signed in as " + username + ".");
+            return new Result(true, "Welcome to Valor, " + username + ".");
         });
     }
 
-    public static void resend(String mail, Consumer<Result> done) {
+    public static void logIn(String name, String password, boolean remember, Consumer<Result> done) {
         run(done, () -> {
-            JsonObject body = obj("type", "signup");
-            body.addProperty("email", mail);
-            Response r = post("/auth/v1/resend", body, null);
-            return r.code == 200 ? new Result(true, false, "Confirmation email sent again.") : fail(error(r));
+            JsonObject body = obj("email", mail(name));
+            body.addProperty("password", password);
+            Response r = post("/auth/v1/token?grant_type=password", body, null);
+            if (r.code != 200) return fail(error(r));
+            session(r.json, remember);
+            return new Result(true, "Signed in as " + username + ".");
         });
     }
 
     public static void logOut() {
         String token = access;
-        access = refresh = username = email = null;
+        access = refresh = username = null;
         sessionFile().delete();
         if (token != null) NET.execute(() -> post("/auth/v1/logout?scope=local", new JsonObject(), token));
     }
@@ -113,7 +129,6 @@ public final class Account {
         String token = p.getProperty("refresh_token");
         if (token == null) return;
         username = p.getProperty("username");
-        email = p.getProperty("email");
         NET.execute(() -> {
             Response r;
             try {
@@ -133,9 +148,8 @@ public final class Account {
         access = s.get("access_token").getAsString();
         refresh = s.get("refresh_token").getAsString();
         JsonObject user = s.getAsJsonObject("user");
-        email = user.get("email").getAsString();
         JsonObject meta = user.has("user_metadata") ? user.getAsJsonObject("user_metadata") : null;
-        username = meta != null && meta.has("username") ? meta.get("username").getAsString() : email;
+        username = meta != null && meta.has("username") ? meta.get("username").getAsString() : "Player";
         if (remember) save();
     }
 
@@ -145,7 +159,6 @@ public final class Account {
         Properties p = new Properties();
         p.setProperty("refresh_token", refresh);
         p.setProperty("username", username);
-        p.setProperty("email", email);
         try (OutputStream out = new FileOutputStream(f)) {
             p.store(out, "Valor session. Delete this file to sign out.");
         } catch (Exception e) {
@@ -199,17 +212,23 @@ public final class Account {
     }
 
     private static Response post(String path, JsonObject body, String bearer) {
+        return request("POST", path, body, bearer);
+    }
+
+    private static Response request(String method, String path, JsonObject body, String bearer) {
         try {
             HttpURLConnection c = (HttpURLConnection) new URL(URL + path).openConnection();
-            c.setRequestMethod("POST");
+            c.setRequestMethod(method);
             c.setConnectTimeout(10000);
             c.setReadTimeout(15000);
-            c.setDoOutput(true);
             c.setRequestProperty("apikey", KEY);
-            c.setRequestProperty("Content-Type", "application/json");
             if (bearer != null) c.setRequestProperty("Authorization", "Bearer " + bearer);
-            try (OutputStream out = c.getOutputStream()) {
-                out.write(body.toString().getBytes(StandardCharsets.UTF_8));
+            if (body != null) {
+                c.setDoOutput(true);
+                c.setRequestProperty("Content-Type", "application/json");
+                try (OutputStream out = c.getOutputStream()) {
+                    out.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                }
             }
             int code = c.getResponseCode();
             InputStream in = code < 400 ? c.getInputStream() : c.getErrorStream();
@@ -236,22 +255,24 @@ public final class Account {
     }
 
     private static Result fail(String message) {
-        return new Result(false, false, message);
+        return new Result(false, message);
     }
 
     /** Turns a Supabase error into a sentence for the player. */
     private static String error(Response r) {
         switch (field(r, "error_code")) {
-            case "invalid_credentials": return "Wrong email or password.";
-            case "email_not_confirmed": return "Confirm your email first. Check your inbox.";
+            case "invalid_credentials": return "Wrong username or password.";
             case "user_already_exists":
-            case "email_exists": return "An account with this email already exists.";
+            case "email_exists": return "That username is taken.";
             case "weak_password": return "That password is too weak. Try a longer one.";
-            case "email_address_invalid": return "That email address isn't valid.";
-            case "email_address_not_authorized": return "Valor can't send email yet. Try again later.";
-            case "over_email_send_rate_limit": return "Too many emails sent. Try again in an hour.";
             case "over_request_rate_limit": return "Too many attempts. Wait a minute and try again.";
             case "signup_disabled": return "Sign up is closed right now.";
+            case "email_not_confirmed":
+            case "email_address_invalid":
+            case "email_address_not_authorized":
+            case "over_email_send_rate_limit":
+                Valor.LOGGER.error("Supabase rejected the account ({}): turn off 'Confirm email' in Auth settings", field(r, "error_code"));
+                return "Accounts aren't available right now. Try again later.";
         }
         String msg = field(r, "msg");
         if (msg.isEmpty()) msg = field(r, "message");

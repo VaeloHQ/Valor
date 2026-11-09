@@ -19,7 +19,7 @@ import java.nio.IntBuffer;
 /** Theme and shared menu resources. Everything here is created on first use and freed by {@link #release()}. */
 public final class Ui {
     public static final int PRIMARY = 0xFF2563FF, PRIMARY_HI = 0xFF4C85FF, CYAN = 0xFF00E5FF, TEXT = 0xFFF4F7FF,
-            MUTED = 0xFF9AA6C4, SURFACE = 0xC40B1020, SURFACE_HI = 0xD8141B33, BORDER = 0x26FFFFFF, DANGER = 0xFFFF5A6E;
+            MUTED = 0xFF9AA6C4, SURFACE = 0xC40B1020, SURFACE_HI = 0xD8141B33, BORDER = 0x26FFFFFF, DANGER = 0xFFFF5A6E, SUCCESS = 0xFF5BE38E;
 
     /** Icon cells in textures/icons.png (4x4 grid, Lucide icons). */
     public static final int I_SETTINGS = 0, I_GRID = 1, I_PLACEHOLDER = 2, I_POWER = 3, I_PLAY = 4, I_SERVER = 5,
