@@ -89,7 +89,7 @@ public class MainMenuScreen extends ValorScreen {
     protected void actionPerformed(GuiButton b) {
         switch (b.id) {
             case MULTI: mc.displayGuiScreen(new MultiplayerScreen(this)); break;
-            case SINGLE: mc.displayGuiScreen(new GuiSelectWorld(this)); break;
+            case SINGLE: mc.displayGuiScreen(new SingleplayerScreen(this)); break;
             case ACCOUNT: mc.displayGuiScreen(new AccountScreen(this, false)); break;
             case CONTINUE: resume(); break;
             case SETTINGS: mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings)); break;

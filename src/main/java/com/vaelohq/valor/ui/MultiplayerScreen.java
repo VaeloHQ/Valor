@@ -49,8 +49,8 @@ public class MultiplayerScreen extends ValorScreen {
     private List<LanServerDetector.LanServer> lanServers = new ArrayList<>();
     private LanServerDetector.ThreadLanServerFind lanThread;
     private int selected = -1;
-    private float scroll, scrollTarget, lx, ly, lw, lh;
-    private boolean dragging;
+    private final ScrollList list = new ScrollList();
+    private float lx, ly, lw, lh;
     private long lastClick;
     private String tooltip;
     private Widgets.Pill join, edit, delete;
@@ -139,10 +139,6 @@ public class MultiplayerScreen extends ValorScreen {
         return entries.size() * (ROW + GAP) + SCAN + lanServers.size() * (ROW + GAP);
     }
 
-    private float maxScroll() {
-        return Math.max(0, contentHeight() - lh);
-    }
-
     @Override
     public void initGui() {
         super.initGui();
@@ -159,6 +155,7 @@ public class MultiplayerScreen extends ValorScreen {
         lx = (width - lw) / 2;
         ly = 44;
         lh = height - ly - 58;
+        list.place(lx, ly, lw, lh);
         long t = opened + 120;
         float w3 = (lw - 12) / 3, w4 = (lw - 18) / 4, y1 = height - 50, y2 = height - 28;
         join = new Widgets.Pill(JOIN, lx, y1, w3, 16, 8, Ui.I_PLAY, "Join server", true, t);
@@ -213,36 +210,25 @@ public class MultiplayerScreen extends ValorScreen {
         String sub = (n == 1 ? "1 saved server" : n + " saved servers") + (k > 0 ? "  ·  " + k + " on your network" : "");
         Ui.regular().drawCentered(sub, cx, 29 + (1 - a) * 4, 5.5f, Ui.alpha(Ui.MUTED, a));
 
-        scrollTarget = Math.max(0, Math.min(maxScroll(), scrollTarget));
-        scroll = Ui.approach(scroll, scrollTarget);
         tooltip = null;
-        boolean inList = mx >= lx && mx < lx + lw && my >= ly && my < ly + lh;
-        Ui.clip(lx - 8, ly, lw + 16, lh);
+        boolean inList = list.contains(mx, my);
+        list.begin(contentHeight());
         for (int i = 0; i < total(); i++) {
-            float y = ly + rowY(i) - scroll;
+            float y = ly + rowY(i) - list.scroll;
             if (y + ROW < ly || y > ly + lh) continue;
             boolean hov = inList && my >= y && my < y + ROW;
             float ra = a * Ui.ease((time() - 0.04f * Math.min(i, 8)) / 0.35f);
             if (i < n) drawServer(entries.get(i), i, y, hov, mx, my, ra);
             else drawLan(lanServers.get(i - n), i, y, hov, ra);
         }
-        drawScan(ly + n * (ROW + GAP) - scroll, a);
-        Ui.endClip();
+        drawScan(ly + n * (ROW + GAP) - list.scroll, a);
+        list.end(mx, my, a);
         if (n == 0 && k == 0) {
             float ey = ly + SCAN + GAP + 26;
             Ui.semibold().drawCentered("No servers yet", cx, ey, 7, Ui.alpha(Ui.TEXT, a));
             Ui.regular().drawCentered("Add one, or join by address with Direct connect.", cx, ey + 12, 5.5f, Ui.alpha(Ui.MUTED, a));
         }
-        if (maxScroll() > 0) {
-            float th = thumbHeight(), ty = ly + (lh - th) * scroll / maxScroll(), sx = lx + lw + 5;
-            boolean on = dragging || (mx >= sx - 2 && mx < sx + 5 && my >= ly && my < ly + lh);
-            Shapes.round(sx, ty, 2.5f, th, 1.25f, Ui.alpha(on ? 0x99FFFFFF : 0x40FFFFFF, a));
-        }
         Ui.tooltip(tooltip, mx, my, width);
-    }
-
-    private float thumbHeight() {
-        return Math.max(16, lh * lh / contentHeight());
     }
 
     /** Eased 0..1 hover amount for a row, kept per server so it survives list rebuilds. */
@@ -407,9 +393,9 @@ public class MultiplayerScreen extends ValorScreen {
     }
 
     private int rowAt(int mx, int my) {
-        if (!inside(mx, my, lx, ly, lw, lh)) return -1;
+        if (!list.contains(mx, my)) return -1;
         for (int i = 0; i < total(); i++) {
-            float y = ly + rowY(i) - scroll;
+            float y = ly + rowY(i) - list.scroll;
             if (my >= y && my < y + ROW) return i;
         }
         return -1;
@@ -418,31 +404,23 @@ public class MultiplayerScreen extends ValorScreen {
     private void select(int i) {
         selected = i;
         updateButtons();
-        if (i < 0) return;
-        float top = rowY(i);
-        if (top < scrollTarget) scrollTarget = top;
-        else if (top + ROW > scrollTarget + lh) scrollTarget = top + ROW - lh;
+        if (i >= 0) list.reveal(rowY(i), ROW);
     }
 
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();
-        if (wheel != 0) scrollTarget = Math.max(0, Math.min(maxScroll(), scrollTarget - Math.signum(wheel) * (ROW + GAP)));
+        list.wheel(Mouse.getEventDWheel(), ROW + GAP);
     }
 
     @Override
     protected void mouseClicked(int mx, int my, int button) throws IOException {
         super.mouseClicked(mx, my, button);
         if (button != 0) return;
-        if (maxScroll() > 0 && inside(mx, my, lx + lw + 3, ly, 7, lh)) {
-            dragging = true;
-            dragTo(my);
-            return;
-        }
+        if (list.press(mx, my)) return;
         int i = rowAt(mx, my), n = entries.size();
         if (i < 0) return;
-        float y = ly + rowY(i) - scroll, ay = y + ROW - 13;
+        float y = ly + rowY(i) - list.scroll, ay = y + ROW - 13;
         if (i < n) {
             if (inside(mx, my, lx + lw - 24, ay, 10, 10)) {
                 if (i > 0) move(i, -1);
@@ -467,18 +445,13 @@ public class MultiplayerScreen extends ValorScreen {
 
     @Override
     protected void mouseClickMove(int mx, int my, int button, long held) {
-        if (dragging) dragTo(my);
+        list.drag(my);
     }
 
     @Override
     protected void mouseReleased(int mx, int my, int state) {
         super.mouseReleased(mx, my, state);
-        dragging = false;
-    }
-
-    private void dragTo(int my) {
-        float th = thumbHeight();
-        scroll = scrollTarget = Math.max(0, Math.min(maxScroll(), (my - ly - th / 2) / (lh - th) * maxScroll()));
+        list.release();
     }
 
     @Override

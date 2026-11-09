@@ -60,7 +60,12 @@ public final class Recent {
     }
 
     public static String ago() {
-        long m = (System.currentTimeMillis() - time) / 60000;
+        return ago(time);
+    }
+
+    /** "just now", "5m ago", "3h ago" or "2d ago" for a System.currentTimeMillis() timestamp. */
+    public static String ago(long when) {
+        long m = (System.currentTimeMillis() - when) / 60000;
         if (m < 1) return "just now";
         if (m < 60) return m + "m ago";
         if (m < 1440) return m / 60 + "h ago";
