@@ -1,4 +1,4 @@
-"""Valor demo launcher: installs Minecraft 1.8.9 + Forge + Java 8 into ~/.Valor/game and launches with an offline name."""
+"""Headless dev launcher (used for automated testing): installs Minecraft 1.8.9 + Forge + Java 8 into ~/.Valor/game and launches with an offline name. Players use the Electron launcher in launcher/."""
 import hashlib, io, json, os, platform, shutil, subprocess, sys, tarfile, urllib.request, uuid, zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -136,7 +136,7 @@ def offline_uuid(name):
 
 
 def main():
-    cfg_file = ROOT / "launcher.json"
+    cfg_file = ROOT / "dev-launcher.json"
     cfg = json.loads(cfg_file.read_text()) if cfg_file.exists() else {}
     if "name" not in cfg:
         cfg["name"] = input("Username: ").strip() or "ValorPlayer"
