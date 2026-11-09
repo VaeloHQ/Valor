@@ -1,5 +1,6 @@
 package com.vaelohq.valor.ui;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -14,7 +15,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
-/** Smooth TTF text: glyphs 32..last baked once into a 1024x1024 atlas, drawn as linear-filtered quads. */
+/**
+ * Smooth TTF text: glyphs 32..last baked once into a 1024x1024 atlas, drawn as linear-filtered quads. Characters the
+ * atlas lacks (other scripts, symbols) are drawn with Minecraft's own font, which covers all of Unicode.
+ */
 public final class ValorFont {
     private static final int ATLAS = 1024;
     private final int res, cell, pad, last, cols, tex;
@@ -49,14 +53,22 @@ public final class ValorFont {
         }
     }
 
-    private int glyph(char c) {
-        return c >= 32 && c <= last ? c : '?';
+    private boolean has(char c) {
+        return c >= 32 && c <= last && adv[c] > 0;
+    }
+
+    /** Scale that makes Minecraft's font about as tall as this one at size. */
+    private static float mcScale(float size) {
+        return size / 9.6f;
     }
 
     public float width(String s, float size) {
         float w = 0;
-        for (int i = 0; i < s.length(); i++) w += adv[glyph(s.charAt(i))];
-        return w * size / res;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            w += has(c) ? adv[c] * size / res : Math.max(0, Minecraft.getMinecraft().fontRendererObj.getCharWidth(c)) * mcScale(size);
+        }
+        return w;
     }
 
     /** Draws s with its top-left at (x, y); size is the font size in GUI pixels. */
@@ -66,7 +78,22 @@ public final class ValorFont {
 
     /** Same as draw, with a left-to-right colour gradient across the whole string. */
     public void draw(String s, float x, float y, float size, int left, int right) {
-        float k = size / res, c = cell * k, uv = (float) cell / ATLAS, x0 = x, w = Math.max(width(s, size), 0.001f);
+        float w = Math.max(width(s, size), 0.001f), cx = x;
+        for (int i = 0; i < s.length(); ) {
+            boolean ok = has(s.charAt(i));
+            int j = i;
+            while (j < s.length() && has(s.charAt(j)) == ok) j++;
+            String run = j - i == s.length() ? s : s.substring(i, j);
+            if (ok) atlas(run, cx, y, size, left, right, x, w);
+            else minecraft(run, cx, y, size, Ui.mix(left, right, Ui.clamp((cx - x) / w)));
+            cx += width(run, size);
+            i = j;
+        }
+    }
+
+    /** Draws characters the atlas has; the gradient runs from x0 across w. */
+    private void atlas(String s, float x, float y, float size, int left, int right, float x0, float w) {
+        float k = size / res, c = cell * k, uv = (float) cell / ATLAS;
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GlStateManager.disableAlpha();
@@ -79,7 +106,7 @@ public final class ValorFont {
         x -= pad * k;
         y -= pad * k;
         for (int i = 0; i < s.length(); i++) {
-            int ch = glyph(s.charAt(i)), n = ch - 32;
+            int ch = s.charAt(i), n = ch - 32;
             float u = (n % cols) * uv, v = (n / cols) * uv;
             int cl = Ui.mix(left, right, Ui.clamp((x - x0) / w)), cr = Ui.mix(left, right, Ui.clamp((x + c - x0) / w));
             vert(wr, x, y + c, u, v + uv, cl);
@@ -91,6 +118,20 @@ public final class ValorFont {
         Tessellator.getInstance().draw();
         GlStateManager.shadeModel(GL11.GL_FLAT);
         GlStateManager.enableAlpha();
+    }
+
+    /** Draws characters the atlas lacks with Minecraft's font, scaled and placed on this font's baseline. */
+    private static void minecraft(String s, float x, float y, float size, int argb) {
+        if ((argb >>> 24) < 4) return;   // Minecraft treats an almost-zero alpha as opaque
+        float k = mcScale(size);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y + size * 0.97f - 7 * k, 0);
+        GlStateManager.scale(k, k, 1);
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableBlend();
+        Minecraft.getMinecraft().fontRendererObj.drawString(s, 0, 0, argb, false);
+        GlStateManager.popMatrix();
+        GlStateManager.color(1, 1, 1, 1);
     }
 
     private static void vert(WorldRenderer wr, float x, float y, float u, float v, int argb) {

@@ -5,28 +5,30 @@ import com.vaelohq.valor.style.ValorPack;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiControls;
-import net.minecraft.client.gui.GuiLanguage;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.Language;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.gui.GuiScreenResourcePacks;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EnumPlayerModelParts;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumDifficulty;
+import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Valor settings: a sidebar of categories and a scrolling list of rows (switches, choices and sliders). Every row
  * changes the setting through GameSettings exactly as the vanilla screens do, so its side effects still happen.
- * Options are saved when the screen closes.
+ * Key bindings and languages work as in GuiControls and GuiLanguage. Options are saved when the screen closes.
  */
 public class OptionsScreen extends ValorScreen {
     private enum Category {
@@ -58,6 +60,7 @@ public class OptionsScreen extends ValorScreen {
     private final List<Row> rows = new ArrayList<>();
     private Category category = last;
     private Row dragging;
+    private KeyBinding listening;
 
     public OptionsScreen(GuiScreen parent) {
         this.parent = parent;
@@ -237,7 +240,17 @@ public class OptionsScreen extends ValorScreen {
                 rows.add(option(GameSettings.Options.INVERT_MOUSE));
                 rows.add(option(GameSettings.Options.SENSITIVITY));
                 rows.add(option(GameSettings.Options.TOUCHSCREEN));
-                rows.add(action("Key bindings", "Edit", () -> mc.displayGuiScreen(new GuiControls(this, gs))));
+                rows.add(action(I18n.format("controls.resetAll"), "Reset", () -> {
+                    for (KeyBinding k : gs.keyBindings) k.setKeyCode(k.getKeyCodeDefault());
+                    KeyBinding.resetKeyBindingArrayAndHash();
+                }));
+                KeyBinding[] keys = ArrayUtils.clone(gs.keyBindings);
+                Arrays.sort(keys);
+                String section = null;
+                for (KeyBinding k : keys) {
+                    if (!k.getKeyCategory().equals(section)) rows.add(new Header(I18n.format(section = k.getKeyCategory())));
+                    rows.add(new KeyRow(k));
+                }
                 break;
             case SOUND:
                 for (SoundCategory c : SoundCategory.values()) rows.add(new Slider(I18n.format("soundCategory." + c.getCategoryName())) {
@@ -270,9 +283,17 @@ public class OptionsScreen extends ValorScreen {
                 });
                 break;
             case LANGUAGE:
-                rows.add(action("Language", mc.getLanguageManager().getCurrentLanguage().toString(),
-                        () -> mc.displayGuiScreen(new GuiLanguage(this, gs, mc.getLanguageManager()))));
                 rows.add(option(GameSettings.Options.FORCE_UNICODE_FONT));
+                rows.add(new Header("Languages"));
+                for (Language l : mc.getLanguageManager().getLanguages()) rows.add(new Choice(l.toString()) {
+                    String value() {
+                        return l.getLanguageCode().equals(mc.getLanguageManager().getCurrentLanguage().getLanguageCode()) ? "Selected" : "";
+                    }
+
+                    void click(int mx, float x, float w) {
+                        selectLanguage(l);
+                    }
+                });
                 break;
             case PACKS:
                 rows.add(action("Resource packs", "Open", () -> mc.displayGuiScreen(new GuiScreenResourcePacks(this))));
@@ -289,6 +310,76 @@ public class OptionsScreen extends ValorScreen {
                 });
                 break;
         }
+    }
+
+    /** Section title inside the list. */
+    private final class Header extends Row {
+        Header(String label) {
+            super(label);
+        }
+
+        @Override
+        boolean enabled() {
+            return false;
+        }
+
+        @Override
+        void draw(float x, float y, float w, float a) {
+            Ui.semibold().draw(label, x + 4, y + ROW - 9, 5.5f, Ui.alpha(Ui.MUTED, a));
+        }
+
+        @Override
+        void control(float right, float y, float a) {
+        }
+    }
+
+    /** A key binding: click it, then press a key or mouse button (Escape clears it). Red when another binding uses the same key. */
+    private final class KeyRow extends Row {
+        static final float KEY = 64, RESET = 30;
+        final KeyBinding key;
+
+        KeyRow(KeyBinding key) {
+            super(I18n.format(key.getKeyDescription()));
+            this.key = key;
+        }
+
+        @Override
+        void control(float right, float y, float a) {
+            boolean clash = false;
+            if (key.getKeyCode() != 0) for (KeyBinding k : mc.gameSettings.keyBindings)
+                if (k != key && k.getKeyCode() == key.getKeyCode()) clash = true;
+            boolean wait = listening == key;
+            String name = wait ? "Press a key" : GameSettings.getKeyDisplayString(key.getKeyCode());
+            Shapes.draw(right - KEY, y + 3, KEY, ROW - 6, (ROW - 6) / 2, Ui.alpha(wait ? 0xFF22357A : 0xFF1A2140, a),
+                    Ui.alpha(wait ? 0xFF1A2A66 : 0xFF141A33, a), Ui.alpha(wait ? Ui.CYAN : clash ? Ui.DANGER : 0x30FFFFFF, a), wait || clash ? 0.8f : 0.5f, 0, 0, 0);
+            ValorFont f = Ui.semibold();
+            float size = ROW * 0.29f;
+            f.drawCentered(f.fit(name, size, KEY - 8), right - KEY / 2, y + (ROW - size * 1.2f) / 2, size,
+                    Ui.alpha(wait ? Ui.TEXT : clash ? Ui.DANGER : 0xFFC9D2E8, a));
+            if (key.getKeyCode() != key.getKeyCodeDefault())
+                Ui.regular().draw("Reset", right - KEY - RESET, y + (ROW - size * 1.2f) / 2, size, Ui.alpha(0xFF8FB4FF, a));
+        }
+
+        @Override
+        void click(int mx, float x, float w) {
+            float right = x + w - ROW / 2 * 0.9f;
+            if (key.getKeyCode() != key.getKeyCodeDefault() && mx >= right - KEY - RESET - 2 && mx < right - KEY - 2) {
+                mc.gameSettings.setOptionKeyBinding(key, key.getKeyCodeDefault());
+                KeyBinding.resetKeyBindingArrayAndHash();
+            } else listening = key;
+        }
+    }
+
+    /** Same steps as vanilla's GuiLanguage. */
+    private void selectLanguage(Language l) {
+        GameSettings gs = mc.gameSettings;
+        mc.getLanguageManager().setCurrentLanguage(l);
+        gs.language = l.getLanguageCode();
+        mc.refreshResources();
+        mc.fontRendererObj.setUnicodeFlag(mc.getLanguageManager().isCurrentLocaleUnicode() || gs.forceUnicodeFont);
+        mc.fontRendererObj.setBidiFlag(mc.getLanguageManager().isCurrentLanguageBidirectional());
+        gs.saveOptions();
+        initGui();
     }
 
     /** Vanilla's difficulty button: cycles in singleplayer unless hardcore or locked, shown read-only otherwise. */
@@ -359,6 +450,12 @@ public class OptionsScreen extends ValorScreen {
 
     @Override
     protected void mouseClicked(int mx, int my, int button) throws IOException {
+        if (listening != null) {   // binding a mouse button, as GuiControls does
+            mc.gameSettings.setOptionKeyBinding(listening, -100 + button);
+            listening = null;
+            KeyBinding.resetKeyBindingArrayAndHash();
+            return;
+        }
         super.mouseClicked(mx, my, button);
         if (button != 0 || list.press(mx, my)) return;
         Row r = rowAt(mx, my);
@@ -397,12 +494,19 @@ public class OptionsScreen extends ValorScreen {
             return;
         }
         last = category = Category.values()[b.id];
+        listening = null;
         initGui();
     }
 
     @Override
     protected void keyTyped(char c, int key) {
-        if (key == Keyboard.KEY_ESCAPE) mc.displayGuiScreen(parent);
+        if (listening != null) {   // GuiControls: Escape clears, otherwise the key (or the character for keys LWJGL doesn't know)
+            if (key == Keyboard.KEY_ESCAPE) mc.gameSettings.setOptionKeyBinding(listening, 0);
+            else if (key != 0) mc.gameSettings.setOptionKeyBinding(listening, key);
+            else if (c > 0) mc.gameSettings.setOptionKeyBinding(listening, c + 256);
+            listening = null;
+            KeyBinding.resetKeyBindingArrayAndHash();
+        } else if (key == Keyboard.KEY_ESCAPE) mc.displayGuiScreen(parent);
     }
 
     @Override
