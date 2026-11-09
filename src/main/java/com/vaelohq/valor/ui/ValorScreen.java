@@ -41,8 +41,13 @@ public abstract class ValorScreen extends GuiScreen {
                     Ui.alpha(0x99000000, a), 5, 2);
             f.drawCentered(toast, width / 2f, y + 4.2f, 6, Ui.alpha(Ui.TEXT, a));
         }
-        float fade = 1 - Ui.ease(time() / 0.35f);
+        float fade = fadeIn() ? 1 - Ui.ease(time() / 0.35f) : 0;
         if (fade > 0) Ui.rect(0, 0, width, height, Ui.alpha(0xFF000000, fade));
+    }
+
+    /** Whether the screen fades in from black when it opens. */
+    protected boolean fadeIn() {
+        return true;
     }
 
     public static void toast(String text) {

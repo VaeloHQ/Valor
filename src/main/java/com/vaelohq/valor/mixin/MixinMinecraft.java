@@ -1,8 +1,10 @@
 package com.vaelohq.valor.mixin;
 
 import com.vaelohq.valor.Valor;
+import com.vaelohq.valor.ui.LoadingScreen;
 import com.vaelohq.valor.ui.ValorScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureManager;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,5 +48,17 @@ public abstract class MixinMinecraft {
     private void valor$menuFps(CallbackInfoReturnable<Integer> cir) {
         Minecraft mc = (Minecraft) (Object) this;
         if (mc.theWorld == null && mc.currentScreen instanceof ValorScreen) cir.setReturnValue(Math.min(mc.gameSettings.limitFramerate, 60));
+    }
+
+    /** Minecraft draws its Mojang screen only when Forge's loading screen is off; Valor's loading screen replaces it. */
+    @Inject(method = "drawSplashScreen", at = @At("HEAD"), cancellable = true)
+    private void valor$loadingScreen(TextureManager textures, CallbackInfo ci) {
+        LoadingScreen.begin();
+        ci.cancel();
+    }
+
+    @Inject(method = "startGame", at = @At("RETURN"))
+    private void valor$started(CallbackInfo ci) {
+        LoadingScreen.finish();
     }
 }

@@ -11,15 +11,11 @@ import java.io.Writer;
 import java.util.Properties;
 
 /**
- * Forge's loading screen runs before any mod loads, so Valor cannot draw it, only configure it through
- * config/splash.properties: Valor colours and no logos. Forge multiplies both logos by the background colour (it
- * expects white), so on navy they would be dark smudges; they point at a fully transparent texture that ships with
- * vanilla, so there is no extra file that could go missing (a missing texture crashes Forge at startup).
- * Takes effect from the next launch.
+ * Turns Forge's own loading screen off in config/splash.properties, so Minecraft runs its plain startup screen, which
+ * Valor replaces with its own (LoadingScreen). Forge reads the file before any mod loads, so this takes effect from
+ * the next launch; the very first launch with Valor still shows Forge's screen.
  */
 public final class Splash {
-    private static final String TRANSPARENT = "textures/blocks/redstone_dust_cross_overlay.png";
-
     private Splash() {
     }
 
@@ -30,18 +26,13 @@ public final class Splash {
             if (file.isFile()) try (Reader r = new FileReader(file)) {
                 p.load(r);
             }
-            p.setProperty("background", "0x060A1E");
-            p.setProperty("font", "0xF4F7FF");
-            p.setProperty("barBorder", "0x2563FF");
-            p.setProperty("barBackground", "0x0B1020");
-            p.setProperty("bar", "0x2563FF");
-            p.setProperty("logoTexture", TRANSPARENT);
-            p.setProperty("forgeTexture", TRANSPARENT);
+            if ("false".equals(p.getProperty("enabled"))) return;
+            p.setProperty("enabled", "false");
             try (Writer w = new FileWriter(file)) {
                 p.store(w, "Splash screen properties");
             }
         } catch (IOException e) {
-            Valor.LOGGER.warn("Couldn't set up the Valor loading screen", e);
+            Valor.LOGGER.warn("Couldn't turn off Forge's loading screen", e);
         }
     }
 }
