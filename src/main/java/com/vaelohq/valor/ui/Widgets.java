@@ -8,6 +8,13 @@ public final class Widgets {
     private Widgets() {
     }
 
+    /** On/off switch, 18x9, with knob position k (0 = off, 1 = on). */
+    public static void drawSwitch(float x, float y, float k, float a) {
+        Shapes.round(x, y, 18, 9, 4.5f, Ui.alpha(Ui.mix(0xFF2A2F42, Ui.PRIMARY, k), a));
+        Shapes.draw(x + 1.2f + k * 9, y + 1.2f, 6.6f, 6.6f, 3.3f, Ui.alpha(0xFFFFFFFF, a), Ui.alpha(0xFFE6EBF7, a), 0, 0,
+                Ui.alpha(0x66000000, a), 1.5f, 0.6f);
+    }
+
     /** Valor look for a vanilla slider knob at knobX: a blue fill up to the knob, then a dark knob with a cyan ring (text stays readable over it). */
     public static void sliderKnob(GuiButton b, int knobX) {
         Ui.frame();
@@ -147,6 +154,35 @@ public final class Widgets {
                     Ui.alpha(0x772563FF, a), 4, 1.5f);
             float is = b * 0.42f;
             Ui.icon(Ui.I_PLAY, bx + (b - is) / 2 + is * 0.06f, by + (b - is) / 2, is, Ui.alpha(0xFFFFFFFF, a));
+        }
+    }
+
+    /** Settings row: the label on the left and, on the right, a switch (when {@code on} is set) or the current {@code value}. */
+    public static class Setting extends Base {
+        public Boolean on;
+        public String value;
+        private float knob = -1;
+
+        public Setting(int id, float x, float y, float w, float h, String label, long showAt) {
+            super(id, x, y, w, h, label, showAt);
+        }
+
+        @Override
+        void paint(float y, float a) {
+            float h = height, r = h / 2;
+            Shapes.draw(xPosition, y, width, h, r, Ui.alpha(Ui.mix(0xB4141A30, 0xD01B2340, hover), a),
+                    Ui.alpha(Ui.mix(0xB40A0F20, 0xD0111933, hover), a), Ui.alpha(Ui.mix(0x1FFFFFFF, 0x38FFFFFF, hover), a), 0.5f,
+                    Ui.alpha(0x55000000, a), 4, 1.5f);
+            ring(y, r, a);
+            float size = h * 0.31f, ty = y + (h - size * 1.2f) / 2, pad = r * 0.9f;
+            Ui.regular().draw(displayString, xPosition + pad, ty, size, Ui.alpha(Ui.mix(0xFFC9D2E8, Ui.TEXT, hover), a));
+            if (on != null) {
+                knob = knob < 0 ? (on ? 1 : 0) : Ui.approach(knob, on ? 1 : 0);
+                drawSwitch(xPosition + width - pad - 18, y + (h - 9) / 2, knob, a);
+            } else if (value != null) {
+                ValorFont f = Ui.semibold();
+                f.draw(value, xPosition + width - pad - f.width(value, size), ty, size, Ui.alpha(0xFF8FB4FF, a));
+            }
         }
     }
 

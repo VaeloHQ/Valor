@@ -117,9 +117,7 @@ public class AccountScreen extends ValorScreen {
             r.draw("Remember me", px + 16, row + 1, 5.5f, Ui.alpha(0xFFC9D2E8, a));
             knob = Ui.approach(knob, remember ? 1 : 0);
             float tx = px + pw - 16 - 18;
-            Shapes.round(tx, row, 18, 9, 4.5f, Ui.alpha(Ui.mix(0xFF2A2F42, Ui.PRIMARY, knob), a));
-            Shapes.draw(tx + 1.2f + knob * 9, row + 1.2f, 6.6f, 6.6f, 3.3f, Ui.alpha(0xFFFFFFFF, a), Ui.alpha(0xFFE6EBF7, a), 0, 0,
-                    Ui.alpha(0x66000000, a), 1.5f, 0.6f);
+            Widgets.drawSwitch(tx, row, knob, a);
         } else if (mode == Mode.SIGNUP) {
             String name = user.text.trim(), status;
             int color = Ui.MUTED;

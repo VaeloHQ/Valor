@@ -4,7 +4,6 @@ import com.vaelohq.valor.Recent;
 import net.minecraft.client.AnvilConverterException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiErrorScreen;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSelectWorld;
@@ -214,7 +213,7 @@ public class SingleplayerScreen extends ValorScreen {
     protected void actionPerformed(GuiButton b) {
         switch (b.id) {
             case PLAY: play(selected); break;
-            case CREATE: mc.displayGuiScreen(new GuiCreateWorld(this)); break;
+            case CREATE: mc.displayGuiScreen(new CreateWorldScreen(this)); break;
             case RENAME: {
                 String folder = worlds.get(selected).getFileName();
                 WorldInfo info = mc.getSaveLoader().getWorldInfo(folder);
@@ -240,12 +239,10 @@ public class SingleplayerScreen extends ValorScreen {
                 break;
             }
             case RECREATE: {
-                GuiCreateWorld create = new GuiCreateWorld(this);
                 ISaveHandler handler = mc.getSaveLoader().getSaveLoader(worlds.get(selected).getFileName(), false);
                 WorldInfo info = handler.loadWorldInfo();
                 handler.flush();
-                create.recreateFromExistingWorld(info);
-                mc.displayGuiScreen(create);
+                mc.displayGuiScreen(new CreateWorldScreen(this).recreate(info));
                 break;
             }
             case BACK: mc.displayGuiScreen(parent); break;
