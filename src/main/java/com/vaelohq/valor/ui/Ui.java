@@ -16,7 +16,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.nio.IntBuffer;
 
-/** Theme and shared menu resources. Everything here is created on first use and freed by {@link #release()}. */
+/** Theme and shared drawing resources, created on first use. Menu-only ones are freed by {@link #release()}. */
 public final class Ui {
     public static final int PRIMARY = 0xFF2563FF, PRIMARY_HI = 0xFF4C85FF, CYAN = 0xFF00E5FF, TEXT = 0xFFF4F7FF,
             MUTED = 0xFF9AA6C4, SURFACE = 0xC40B1020, SURFACE_HI = 0xD8141B33, BORDER = 0x26FFFFFF, DANGER = 0xFFFF5A6E, SUCCESS = 0xFF5BE38E;
@@ -164,16 +164,14 @@ public final class Ui {
         for (int i = 0; i < lines.length; i++) f.drawFormatted(lines[i], x + 6, y + 4 + i * 8, 5.5f, TEXT, 1);
     }
 
-    /** Frees fonts, textures and shaders. Called when the player enters a world. */
+    /** Frees menu-only textures and shaders. Called when the player enters a world. */
     public static void release() {
-        for (ValorFont f : new ValorFont[]{regular, semibold, bold}) if (f != null) f.delete();
-        regular = semibold = bold = null;
+        // Fonts, icons and the shape shader stay: HUD modules draw with them every frame.
         if (logo != -1) TextureUtil.deleteTexture(logo);
-        if (icons != -1) TextureUtil.deleteTexture(icons);
-        logo = icons = -1;
+        logo = -1;
         for (int tex : placeholders.values()) TextureUtil.deleteTexture(tex);
         placeholders.clear();
-        Background.release();   // the small shape shader stays: the in-game HUD and buttons use it
+        Background.release();
     }
 
     public static void logo(float x, float y, float size, float alpha) {

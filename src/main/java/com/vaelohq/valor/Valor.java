@@ -1,5 +1,6 @@
 package com.vaelohq.valor;
 
+import com.vaelohq.valor.module.Modules;
 import com.vaelohq.valor.style.Splash;
 import com.vaelohq.valor.style.ValorPack;
 import com.vaelohq.valor.ui.ScreenSwap;
@@ -38,6 +39,7 @@ public class Valor {
         MinecraftForge.EVENT_BUS.register(this);
         ValorPack.watchReloads();
         MinecraftForge.EVENT_BUS.register(new com.vaelohq.valor.style.Hud());
+        Modules.init();
         Account.restore();
         LOGGER.info("{} {} loaded", NAME, VERSION);
     }

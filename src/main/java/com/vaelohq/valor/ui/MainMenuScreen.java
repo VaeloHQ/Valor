@@ -93,7 +93,7 @@ public class MainMenuScreen extends ValorScreen {
             case ACCOUNT: mc.displayGuiScreen(new AccountScreen(this, false)); break;
             case CONTINUE: resume(); break;
             case SETTINGS: mc.displayGuiScreen(new OptionsScreen(this)); break;
-            case MODS:
+            case MODS: mc.displayGuiScreen(new ModsScreen(this)); break;
             case SOON_A:
             case SOON_B: toast("Coming soon"); break;
             case QUIT: mc.shutdown(); break;
@@ -118,6 +118,6 @@ public class MainMenuScreen extends ValorScreen {
             GuiButton b = buttonList.get(focus);
             b.playPressSound(mc.getSoundHandler());
             actionPerformed(b);
-        } else if (key == Keyboard.KEY_RSHIFT) toast("Mods menu coming soon");
+        } else if (key == com.vaelohq.valor.module.Modules.MENU_KEY.getKeyCode()) mc.displayGuiScreen(new ModsScreen(this));
     }
 }

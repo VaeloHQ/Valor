@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiShareToLan;
 import net.minecraft.realms.RealmsBridge;
-import net.minecraftforge.fml.client.GuiModList;
 
 /** Valor pause menu. Same actions as vanilla's GuiIngameMenu, including Forge's mod list and Realms handling. */
 public class PauseScreen extends ValorScreen {
@@ -22,7 +21,7 @@ public class PauseScreen extends ValorScreen {
         lan.enabled = mc.isSingleplayer() && mc.getIntegratedServer() != null && !mc.getIntegratedServer().getPublic();
         buttonList.add(lan);
         buttonList.add(new Widgets.Pill(OPTIONS, x, y + 66, half, h, 8, Ui.I_SETTINGS, "Options", false, t + 90));
-        buttonList.add(new Widgets.Pill(MOD_OPTIONS, x + half + 6, y + 66, half, h, 8, Ui.I_GRID, "Mod options", false, t + 90));
+        buttonList.add(new Widgets.Pill(MOD_OPTIONS, x + half + 6, y + 66, half, h, 8, Ui.I_GRID, "Mods", false, t + 90));
         String quit = mc.isIntegratedServerRunning() ? "Save and quit to title" : "Disconnect";
         buttonList.add(new Widgets.Pill(QUIT, x, y + 92, w, h, 8, Ui.I_POWER, quit, false, t + 120).danger());
     }
@@ -56,7 +55,7 @@ public class PauseScreen extends ValorScreen {
             case ACHIEVEMENTS: if (mc.thePlayer != null) mc.displayGuiScreen(new AchievementsScreen(this, mc.thePlayer.getStatFileWriter())); break;
             case STATS: if (mc.thePlayer != null) mc.displayGuiScreen(new StatsScreen(this, mc.thePlayer.getStatFileWriter())); break;
             case LAN: mc.displayGuiScreen(new GuiShareToLan(this)); break;
-            case MOD_OPTIONS: mc.displayGuiScreen(new GuiModList(this)); break; // what Forge's showInGameModOptions does
+            case MOD_OPTIONS: mc.displayGuiScreen(new ModsScreen(this)); break;
         }
     }
 }
