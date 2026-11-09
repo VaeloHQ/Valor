@@ -23,7 +23,7 @@ public abstract class MixinGuiButton extends Gui {
     @Shadow public String displayString;
     @Shadow public boolean enabled;
     @Shadow public boolean visible;
-    @Shadow public int packedFGColour;
+    @Shadow(remap = false) public int packedFGColour;   // added by Forge
     @Shadow protected boolean hovered;
     @Unique private float valor$hover;
 

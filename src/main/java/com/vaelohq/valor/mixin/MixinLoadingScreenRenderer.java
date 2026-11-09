@@ -29,7 +29,7 @@ public abstract class MixinLoadingScreenRenderer {
     }
 
     /** Vanilla draws its dirt screen only when FML did not draw one; Valor draws instead and reports it handled. */
-    @Redirect(method = "setLoadingProgress", at = @At(value = "INVOKE",
+    @Redirect(method = "setLoadingProgress", at = @At(value = "INVOKE", remap = false,
             target = "Lnet/minecraftforge/fml/client/FMLClientHandler;handleLoadingScreen(Lnet/minecraft/client/gui/ScaledResolution;)Z"))
     private boolean valor$draw(FMLClientHandler fml, ScaledResolution sr) throws java.io.IOException {
         if (fml.handleLoadingScreen(sr)) return true;
