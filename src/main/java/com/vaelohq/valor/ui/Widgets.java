@@ -8,6 +8,14 @@ public final class Widgets {
     private Widgets() {
     }
 
+    /** Valor look for a vanilla slider knob at knobX: a blue fill up to the knob, then a dark knob with a cyan ring (text stays readable over it). */
+    public static void sliderKnob(GuiButton b, int knobX) {
+        Ui.frame();
+        int h = b.height;
+        Shapes.draw(b.xPosition, b.yPosition, knobX + 8 - b.xPosition, h, h / 2f, 0x9A3B74FF, 0x9A1F55E8, 0, 0, 0, 0, 0);
+        Shapes.draw(knobX, b.yPosition + 2, 8, h - 4, 4, 0xFF13204A, 0xFF0A1230, Ui.CYAN, 1, 0x9900B4FF, 3, 0);
+    }
+
     public abstract static class Base extends GuiButton {
         final long showAt;
         float hover;

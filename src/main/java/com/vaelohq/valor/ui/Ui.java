@@ -90,6 +90,30 @@ public final class Ui {
         }
     }
 
+    /** Clips drawing to a GUI-space rectangle until {@link #endClip()}. */
+    public static void clip(float x, float y, float w, float h) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        int f = new net.minecraft.client.gui.ScaledResolution(mc).getScaleFactor();
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        GL11.glScissor(Math.round(x * f), Math.round(mc.displayHeight - (y + h) * f), Math.max(0, Math.round(w * f)), Math.max(0, Math.round(h * f)));
+    }
+
+    public static void endClip() {
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+    }
+
+    /** Small tooltip panel next to the mouse; lines split on newlines. */
+    public static void tooltip(String text, int mouseX, int mouseY, int screenW) {
+        if (text == null || text.isEmpty()) return;
+        ValorFont f = regular();
+        String[] lines = text.split("\n");
+        float w = 0;
+        for (String l : lines) w = Math.max(w, f.widthFormatted(l, 5.5f));
+        float bw = w + 12, bh = lines.length * 8 + 7, x = Math.min(mouseX + 8, screenW - bw - 4), y = mouseY - bh - 4;
+        Shapes.draw(x, y, bw, bh, 4, 0xF2101630, 0xF20B1028, 0x40FFFFFF, 0.5f, 0x88000000, 4, 1.5f);
+        for (int i = 0; i < lines.length; i++) f.drawFormatted(lines[i], x + 6, y + 4 + i * 8, 5.5f, TEXT, 1);
+    }
+
     /** Frees fonts, textures and shaders. Called when the player enters a world. */
     public static void release() {
         for (ValorFont f : new ValorFont[]{regular, semibold, bold}) if (f != null) f.delete();

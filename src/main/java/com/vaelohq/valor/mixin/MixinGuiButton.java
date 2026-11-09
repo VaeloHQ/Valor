@@ -30,13 +30,17 @@ public abstract class MixinGuiButton extends Gui {
     @Shadow
     protected abstract void mouseDragged(Minecraft mc, int mouseX, int mouseY);
 
+    @Shadow
+    protected abstract int getHoverState(boolean mouseOver);
+
     @Inject(method = "drawButton", at = @At("HEAD"), cancellable = true)
     private void valor$pill(Minecraft mc, int mouseX, int mouseY, CallbackInfo ci) {
         if (!Config.valorStyle) return;
         ci.cancel();
         if (!visible) return;
         hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height;
-        valor$hover = Ui.approach(valor$hover, enabled && hovered ? 1 : 0);
+        boolean slider = enabled && getHoverState(true) == 0;   // sliders report the disabled state so vanilla never highlights them
+        valor$hover = Ui.approach(valor$hover, enabled && hovered && !slider ? 1 : 0);
         float h = valor$hover;
         Ui.frame();
         if (enabled) Shapes.draw(xPosition, yPosition, width, height, height / 2f, Ui.mix(0xDC1A2650, 0xF04C85FF, h), Ui.mix(0xDC0D1434, 0xF02563FF, h),

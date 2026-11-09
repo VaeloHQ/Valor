@@ -97,6 +97,43 @@ public final class ValorFont {
         wr.pos(x, y, 0).tex(u, v).color(argb >> 16 & 255, argb >> 8 & 255, argb & 255, argb >>> 24).endVertex();
     }
 
+    /** Minecraft's 16 chat colours, indexed by their code 0-f. */
+    private static final int[] CODES = {0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA, 0x555555,
+            0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF};
+
+    /** Width of text containing \u00a7 colour/format codes (the codes take no space). */
+    public float widthFormatted(String s, float size) {
+        return width(s.replaceAll("\u00a7.", ""), size);
+    }
+
+    /** Draws text honouring \u00a7 colour codes (format codes such as bold are ignored). */
+    public void drawFormatted(String s, float x, float y, float size, int defaultColor, float alpha) {
+        int color = defaultColor;
+        StringBuilder run = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\u00a7' && i + 1 < s.length()) {
+                if (run.length() > 0) {
+                    draw(run.toString(), x, y, size, Ui.alpha(color, alpha));
+                    x += width(run.toString(), size);
+                    run.setLength(0);
+                }
+                int idx = "0123456789abcdef".indexOf(Character.toLowerCase(s.charAt(++i)));
+                if (idx >= 0) color = 0xFF000000 | CODES[idx];
+                else if (Character.toLowerCase(s.charAt(i)) == 'r') color = defaultColor;
+            } else run.append(c);
+        }
+        if (run.length() > 0) draw(run.toString(), x, y, size, Ui.alpha(color, alpha));
+    }
+
+    /** Cuts text (with \u00a7 codes) to fit maxWidth, adding an ellipsis when cut. */
+    public String fit(String s, float size, float maxWidth) {
+        if (widthFormatted(s, size) <= maxWidth) return s;
+        int n = s.length();
+        while (n > 0 && (widthFormatted(s.substring(0, n) + "...", size) > maxWidth || s.charAt(n - 1) == '\u00a7')) n--;
+        return s.substring(0, n) + "...";
+    }
+
     /** Splits text into lines no wider than maxWidth (breaking at spaces; long words are cut). */
     public java.util.List<String> wrap(String text, float size, float maxWidth) {
         java.util.List<String> lines = new java.util.ArrayList<>();
