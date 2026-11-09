@@ -29,6 +29,7 @@ public class Valor {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(this);
+        Account.restore();
         LOGGER.info("{} {} loaded", NAME, VERSION);
     }
 

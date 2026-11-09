@@ -22,7 +22,7 @@ public class IntroScreen extends ValorScreen {
     }
 
     private void enter() {
-        if (time() > 0.4f) mc.displayGuiScreen(new AccountScreen(new MainMenuScreen(), true));
+        if (time() > 0.4f) mc.displayGuiScreen(com.vaelohq.valor.Account.signedIn() ? new MainMenuScreen() : new AccountScreen(new MainMenuScreen(), true));
     }
 
     @Override
