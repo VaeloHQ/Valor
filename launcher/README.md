@@ -4,6 +4,8 @@ Electron app that installs Minecraft 1.8.9, Forge and Java 8 into `~/.Valor/game
 
 - Run from source: `npm install`, then `npm start` (uses the newest `../build/libs/valor-*.jar`).
 - Windows installer: built by `.github/workflows/launcher.yml`, which bundles the mod as `resources/valor.jar`.
+- Releases: set `version` in `package.json`, commit, then push a matching tag (`git tag v0.2.0`, `git push origin v0.2.0`).
+  `.github/workflows/release.yml` publishes it on GitHub Releases, and installed launchers update to it on their next start.
 - The installer puts the launcher in `C:\Users\<name>\.Valor\launcher`. Everything else is in `~/.Valor` too: Electron data in
   `launcher-data`, settings in `launcher.json`, Java in `runtime` and the game in `game`.
 

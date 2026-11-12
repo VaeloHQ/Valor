@@ -38,6 +38,11 @@ public abstract class Module {
         return setting;
     }
 
+    /** Puts every setting back to its default (HUD modules also go back to their default place and size). */
+    public void reset() {
+        for (Setting s : settings) s.reset();
+    }
+
     public boolean enabled() {
         return enabled;
     }

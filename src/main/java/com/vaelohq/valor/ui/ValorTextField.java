@@ -101,6 +101,12 @@ final class ValorTextField {
         }
     }
 
+    /** Selects the whole text, so typing replaces it (for renaming). */
+    void selectAll() {
+        all = !text.isEmpty();
+        caret = text.length();
+    }
+
     void focus(boolean f) {
         focused = f;
         all = false;

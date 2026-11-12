@@ -10,6 +10,7 @@
 <body>
   <header class="titlebar">
     <div class="drag"></div>
+    <button class="update" id="update" hidden><img src="icons/download.svg" alt=""><span id="update-label"></span></button>
     <button class="win" data-win="minimize" aria-label="Minimize"><img src="icons/minus.svg" alt=""></button>
     <button class="win close" data-win="close" aria-label="Close"><img src="icons/x.svg" alt=""></button>
   </header>
@@ -37,7 +38,14 @@
         <p class="tagline">The PvP client, built for 1.8.9.</p>
         <div class="launch-row">
           <button class="launch" id="launch"><img src="icons/play.svg" alt=""><span id="launch-label">Launch</span></button>
+          <label class="profile-pick" id="profile-pick" title="Mod profile (change it in game with Right Shift)" hidden>
+            <img src="icons/layers.svg" alt=""><select id="profile"></select>
+          </label>
           <div class="playing" id="playing"></div>
+        </div>
+        <div class="quickplay" id="quickplay" hidden>
+          <span>Quick play</span>
+          <div class="fav-row" id="favorites"></div>
         </div>
         <div class="progress" id="progress" hidden>
           <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>

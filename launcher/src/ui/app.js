@@ -3,7 +3,6 @@ const $ = (id) => document.getElementById(id);
 const FEATURED = [
   { name: 'Hypixel', host: 'mc.hypixel.net', port: 25565 },
   { name: 'Minemen Club', host: 'minemen.club', port: 25565 },
-  { name: 'PvP Land', host: 'pvp.land', port: 25565 },
   { name: 'Bedwars Practice', host: 'bedwarspractice.club', port: 25565 },
 ];
 const COLORS = { 0: '#000000', 1: '#0000aa', 2: '#00aa00', 3: '#00aaaa', 4: '#aa0000', 5: '#aa00aa', 6: '#ffaa00', 7: '#aaaaaa',
@@ -128,7 +127,37 @@ $('microsoft').addEventListener('click', async () => {
 function setRunning(running) {
   $('launch').disabled = running;
   $('launch-label').textContent = running ? 'Playing' : 'Launch';
+  $('profile').disabled = running;   // the game owns its profiles while it runs
+  document.querySelectorAll('.fav').forEach((b) => { b.disabled = running; });
 }
+
+// ---- Profiles (made in game; picked here before launching) ----
+
+async function loadProfiles() {
+  const p = await valor.profiles();
+  $('profile-pick').hidden = !p;
+  if (!p) return;
+  $('profile').replaceChildren(...p.names.map((n) => el('option', { value: n, textContent: n })));
+  $('profile').value = p.active;
+}
+
+$('profile').addEventListener('change', async () => {
+  try {
+    await valor.setProfile($('profile').value);
+  } catch (e) {
+    $('launch-error').textContent = message(e);
+    $('launch-error').hidden = false;
+    loadProfiles();
+  }
+});
+
+// ---- Updates ----
+
+valor.onUpdateReady((version) => {
+  $('update-label').textContent = `Restart to update to ${version}`;
+  $('update').hidden = false;
+});
+$('update').addEventListener('click', () => valor.installUpdate());
 
 async function launch(server) {
   $('launch-error').hidden = true;
@@ -154,6 +183,7 @@ valor.onProgress((p) => {
 });
 valor.onGameExit((code) => {
   setRunning(false);
+  loadProfiles();   // the game may have switched or made profiles
   if (code) {
     $('launch-error').textContent = `Valor closed with an error (code ${code}). The log is in your Valor folder: game-output.log.`;
     $('launch-error').hidden = false;
@@ -178,6 +208,35 @@ function allServers() {
   return [...FEATURED.map((s) => ({ ...s, featured: true })), ...settings.servers];
 }
 
+const serverKey = (s) => `${s.host}:${s.port}`;
+const isFavorite = (s) => settings.favorites.includes(serverKey(s));
+
+async function toggleFavorite(s) {
+  const key = serverKey(s);
+  settings = await valor.setSettings({ favorites: isFavorite(s) ? settings.favorites.filter((k) => k !== key) : [...settings.favorites, key] });
+  renderServers();
+  pingAll();
+  renderFavorites();
+}
+
+/** Starred servers as one-click Join buttons under Launch (Quick play), with their icon and players online. */
+function renderFavorites() {
+  const favs = allServers().filter(isFavorite);
+  $('quickplay').hidden = !favs.length;
+  $('favorites').replaceChildren(...favs.map((s) => {
+    const icon = el('img', { src: 'img/server.png', alt: '' });
+    const status = el('small', { textContent: s.port === 25565 ? s.host : serverKey(s) });
+    const b = el('button', { className: 'fav', title: `Join ${s.name}`, disabled: settings.running }, icon, el('span', {}, el('b', { textContent: s.name }), status));
+    b.addEventListener('click', () => launch({ host: s.host, port: s.port }));
+    valor.ping(s.host, s.port).then((r) => {
+      if (r.favicon && r.favicon.startsWith('data:image/png;base64,')) icon.src = r.favicon;
+      status.textContent = `${r.online.toLocaleString()} online`;
+      status.className = 'online';
+    }).catch(() => { status.textContent = 'Offline'; });
+    return b;
+  }));
+}
+
 function renderServers() {
   $('servers').replaceChildren(...allServers().map((s, i) => {
     const icon = el('img', { className: 'icon', src: 'img/server.png', alt: '' });
@@ -186,16 +245,20 @@ function renderServers() {
     const meta = el('div', { className: 'meta' }, address);
     const join = el('button', { className: 'primary small' }, el('img', { src: 'icons/play.svg', alt: '' }), 'Join');
     join.addEventListener('click', () => launch({ host: s.host, port: s.port }));
-    const card = el('div', { className: 'server' }, icon,
-      el('div', {}, el('div', { className: 'name' }, s.name, s.featured ? el('span', { className: 'badge', textContent: 'Featured' }) : null), motd, meta), join);
+    const star = el('button', { className: 'star' + (isFavorite(s) ? ' on' : ''), title: isFavorite(s) ? 'Remove from Quick play' : 'Add to Quick play' },
+      el('img', { src: isFavorite(s) ? 'icons/star-on.svg' : 'icons/star.svg', alt: '' }));
+    star.addEventListener('click', () => toggleFavorite(s));
+    const card = el('div', { className: 'server' + (s.featured ? ' featured' : '') }, icon,
+      el('div', {}, el('div', { className: 'name' }, s.name, s.featured ? el('span', { className: 'badge', textContent: 'Featured' }) : null), motd, meta), join, star);
     if (!s.featured) {
       const remove = el('button', { className: 'remove', title: 'Remove' }, el('img', { src: 'icons/trash-2.svg', alt: '' }));
       remove.addEventListener('click', async () => {
         const list = settings.servers.slice();
         list.splice(i - FEATURED.length, 1);
-        settings = await valor.setSettings({ servers: list });
+        settings = await valor.setSettings({ servers: list, favorites: settings.favorites.filter((k) => k !== serverKey(s)) });
         renderServers();
         pingAll();
+        renderFavorites();
       });
       card.append(remove);
     }
@@ -277,6 +340,8 @@ function bindSettings() {
   renderAccounts();
   bindSettings();
   renderServers();
+  renderFavorites();
+  loadProfiles();
   setRunning(settings.running);
   loadNews();
 })();

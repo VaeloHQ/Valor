@@ -12,12 +12,21 @@ public abstract class HudModule extends Module {
     public static final float MARGIN = 3;
 
     public float x, y, scale = 1;
+    private final float initialX, initialY;
     protected final Setting.Toggle background = add(new Setting.Toggle("background", "Background", true));
 
     protected HudModule(String id, String name, String description, Category category, float x, float y) {
         super(id, name, description, category);
-        this.x = x;
-        this.y = y;
+        this.x = initialX = x;
+        this.y = initialY = y;
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        x = initialX;
+        y = initialY;
+        scale = 1;
     }
 
     /** Unscaled size in GUI pixels. preview: no world is loaded (HUD editor from the main menu), so show sample data. */

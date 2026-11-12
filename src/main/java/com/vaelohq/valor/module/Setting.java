@@ -16,13 +16,21 @@ public abstract class Setting {
 
     abstract void load(JsonElement json);
 
+    /** Back to the value the module was made with. */
+    public abstract void reset();
+
     /** On / off. */
     public static final class Toggle extends Setting {
+        private final boolean initial;
         public boolean value;
 
         public Toggle(String id, String name, boolean value) {
             super(id, name);
-            this.value = value;
+            this.value = initial = value;
+        }
+
+        public void reset() {
+            value = initial;
         }
 
         JsonElement save() {
@@ -38,11 +46,12 @@ public abstract class Setting {
     public static final class Slider extends Setting {
         public final float min, max, step;
         public final String suffix;
+        private final float initial;
         public float value;
 
         public Slider(String id, String name, float value, float min, float max, float step, String suffix) {
             super(id, name);
-            this.value = value;
+            this.value = initial = value;
             this.min = min;
             this.max = max;
             this.step = step;
@@ -56,6 +65,15 @@ public abstract class Setting {
 
         public float fraction() {
             return (value - min) / (max - min);
+        }
+
+        /** Moves one step up (dir > 0) or down. */
+        public void step(int dir) {
+            setFraction(fraction() + Integer.signum(dir) * step / (max - min));
+        }
+
+        public void reset() {
+            value = initial;
         }
 
         public String text() {
@@ -74,12 +92,17 @@ public abstract class Setting {
     /** One of several named options. */
     public static final class Choice extends Setting {
         public final String[] options;
+        private final int initial;
         public int index;
 
         public Choice(String id, String name, int index, String... options) {
             super(id, name);
             this.options = options;
-            this.index = index;
+            this.index = initial = index;
+        }
+
+        public void reset() {
+            index = initial;
         }
 
         public String value() {
@@ -103,11 +126,16 @@ public abstract class Setting {
     public static final class Color extends Setting {
         public static final int[] PALETTE = {0xFFF4F7FF, 0xFF9AA6C4, 0xFF4C85FF, 0xFF00E5FF, 0xFF5BE38E, 0xFFFFD84A, 0xFFFF9F43, 0xFFFF5A6E,
                 0xFFC77DFF, 0xFFFF7EB6};
+        private final int initial;
         public int value;
 
         public Color(String id, String name, int value) {
             super(id, name);
-            this.value = value;
+            this.value = initial = value;
+        }
+
+        public void reset() {
+            value = initial;
         }
 
         JsonElement save() {

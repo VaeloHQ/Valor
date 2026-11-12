@@ -166,7 +166,7 @@ public final class Ui {
 
     /** Frees menu-only textures and shaders. Called when the player enters a world. */
     public static void release() {
-        // Fonts, icons and the shape shader stay: HUD modules draw with them every frame.
+        // Fonts, icons (mod icons too) and the shape shader stay: HUD modules draw with them every frame.
         if (logo != -1) TextureUtil.deleteTexture(logo);
         logo = -1;
         for (int tex : placeholders.values()) TextureUtil.deleteTexture(tex);
@@ -194,6 +194,34 @@ public final class Ui {
         if (icons == -1) icons = load("icons.png");
         float u = (i % 4) / 4f, v = (i / 4) / 4f;
         quad(icons, x, y, size, size, u, v, u + 0.25f, v + 0.25f, argb);
+    }
+
+    private static int modIcons = -1;
+    private static java.util.Map<String, Integer> modIconCells;
+
+    /**
+     * Draws a module's icon from textures/mod-icons.png (cells listed in mod-icons.txt). Returns false when the module has
+     * none, so the caller can lay out without it.
+     */
+    public static boolean modIcon(String id, float x, float y, float size, int argb) {
+        if (modIconCells == null) {
+            modIconCells = new java.util.HashMap<>();
+            try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(
+                    Ui.class.getResourceAsStream("/assets/valor/textures/mod-icons.txt"), java.nio.charset.StandardCharsets.UTF_8))) {
+                for (String line; (line = r.readLine()) != null; ) {
+                    line = line.trim();
+                    if (!line.isEmpty() && !line.startsWith("#")) modIconCells.put(line.split("\\s+")[0], modIconCells.size());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Couldn't read mod-icons.txt", e);
+            }
+        }
+        Integer i = modIconCells.get(id);
+        if (i == null) return false;
+        if (modIcons == -1) modIcons = load("mod-icons.png");
+        float u = (i % 8) / 8f, v = (i / 8) / 8f;
+        quad(modIcons, x, y, size, size, u, v, u + 0.125f, v + 0.125f, argb);
+        return true;
     }
 
     private static int load(String name) {

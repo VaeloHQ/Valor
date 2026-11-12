@@ -15,9 +15,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/** A module's settings as a dialog over the mods menu or HUD editor: switches, sliders, choices and colour swatches. */
+/**
+ * A module's settings as a dialog over the mods menu or HUD editor: switches, sliders (drag, or scroll over one to step
+ * it), choices and colour swatches, plus Reset to put everything back to the defaults.
+ */
 public class ModuleSettingsScreen extends ValorScreen {
-    private static final int DONE = 0;
+    private static final int DONE = 0, RESET = 1;
     private static final float ROW = 18, GAP = 4, SWATCH = 9, TRACK = 80;
 
     private final GuiScreen parent;
@@ -52,7 +55,8 @@ public class ModuleSettingsScreen extends ValorScreen {
         px = (width - pw) / 2;
         py = (height - ph) / 2;
         list.place(px + 14, py + 38, pw - 28, ph - 38 - 30);
-        buttonList.add(new Widgets.Pill(DONE, px + pw / 2 - 50, py + ph - 24, 100, 16, 8, -1, "Done", true, opened + 60));
+        buttonList.add(new Widgets.Pill(RESET, px + pw / 2 - 84, py + ph - 24, 80, 16, 8, -1, "Reset", false, opened + 60));
+        buttonList.add(new Widgets.Pill(DONE, px + pw / 2 + 4, py + ph - 24, 80, 16, 8, -1, "Done", true, opened + 60));
     }
 
     @Override
@@ -108,7 +112,15 @@ public class ModuleSettingsScreen extends ValorScreen {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        list.wheel(Mouse.getEventDWheel(), ROW + GAP);
+        int wheel = Mouse.getEventDWheel();
+        if (wheel == 0) return;
+        int mx = Mouse.getEventX() * width / mc.displayWidth, my = height - Mouse.getEventY() * height / mc.displayHeight - 1;
+        int i = list.contains(mx, my) ? rowAt(my) : -1;
+        // Over a slider's track or value: step it. Anywhere else: scroll the list.
+        if (i >= 0 && rows.get(i) instanceof Setting.Slider && mx >= list.x + list.w - ROW / 2 * 0.9f - TRACK - 30) {
+            ((Setting.Slider) rows.get(i)).step(wheel);
+            changed();
+        } else list.wheel(wheel, ROW + GAP);
     }
 
     @Override
@@ -160,7 +172,14 @@ public class ModuleSettingsScreen extends ValorScreen {
 
     @Override
     protected void actionPerformed(GuiButton b) {
-        close();
+        if (b.id != RESET) {
+            close();
+            return;
+        }
+        module.reset();
+        if (module instanceof HudModule) scale.value = ((HudModule) module).scale;
+        for (int i = 0; i < rows.size(); i++) knobs[i] = -1;   // switches jump to their reset state
+        Modules.save();
     }
 
     @Override
