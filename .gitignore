@@ -4,3 +4,6 @@ run/
 build/
 .gradle/
 
+launcher/node_modules/
+launcher/dist/
+launcher/resources/

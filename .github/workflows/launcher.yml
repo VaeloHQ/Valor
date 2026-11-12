@@ -1,0 +1,48 @@
+name: Build Launcher
+on:
+  push:
+    paths: ['launcher/**', 'src/**', 'build.gradle.kts', '.github/workflows/launcher.yml']
+  workflow_dispatch:
+
+jobs:
+  mod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-java@v4.0.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew build
+      - uses: actions/upload-artifact@v4.3.0
+        with:
+          name: valor-mod
+          path: build/libs/valor-*.jar
+
+  windows:
+    needs: mod
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/download-artifact@v4.1.4
+        with:
+          name: valor-mod
+          path: mod
+      - name: Bundle the mod with the launcher
+        shell: bash
+        run: mkdir -p launcher/resources && cp mod/valor-*.jar launcher/resources/valor.jar
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: launcher/package-lock.json
+      - name: Build the Windows installer
+        working-directory: launcher
+        run: |
+          npm ci
+          npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4.3.0
+        with:
+          name: valor-launcher-windows
+          path: launcher/dist/*.exe

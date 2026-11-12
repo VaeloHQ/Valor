@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data: https://mc-heads.net; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'none'">
+  <title>Valor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="titlebar">
+    <div class="drag"></div>
+    <button class="update" id="update" hidden><img src="icons/download.svg" alt=""><span id="update-label"></span></button>
+    <button class="win" data-win="minimize" aria-label="Minimize"><img src="icons/minus.svg" alt=""></button>
+    <button class="win close" data-win="close" aria-label="Close"><img src="icons/x.svg" alt=""></button>
+  </header>
+
+  <nav class="sidebar">
+    <img class="brand" src="img/logo.png" alt="Valor">
+    <button class="nav active" data-page="home" aria-label="Home"><img src="icons/home.svg" alt=""><span>Home</span></button>
+    <button class="nav" data-page="servers" aria-label="Servers"><img src="icons/server.svg" alt=""><span>Servers</span></button>
+    <button class="nav" data-page="settings" aria-label="Settings"><img src="icons/settings.svg" alt=""><span>Settings</span></button>
+    <button class="avatar" id="avatar" aria-label="Accounts"><img id="avatar-img" src="icons/user.svg" alt=""></button>
+  </nav>
+
+  <div class="popover" id="accounts-popover" hidden>
+    <div class="popover-title">Accounts</div>
+    <div id="popover-list"></div>
+    <button class="ghost small" id="popover-manage"><img src="icons/users.svg" alt="">Manage accounts</button>
+  </div>
+
+  <main>
+    <section class="page home active" id="page-home">
+      <canvas id="silk"></canvas>
+      <div class="hero">
+        <div class="chip">Minecraft 1.8.9 · Forge</div>
+        <h1 class="wordmark">Valor</h1>
+        <p class="tagline">The PvP client, built for 1.8.9.</p>
+        <div class="launch-row">
+          <button class="launch" id="launch"><img src="icons/play.svg" alt=""><span id="launch-label">Launch</span></button>
+          <label class="profile-pick" id="profile-pick" title="Mod profile (change it in game with Right Shift)" hidden>
+            <img src="icons/layers.svg" alt=""><select id="profile"></select>
+          </label>
+          <div class="playing" id="playing"></div>
+        </div>
+        <div class="quickplay" id="quickplay" hidden>
+          <span>Quick play</span>
+          <div class="fav-row" id="favorites"></div>
+        </div>
+        <div class="progress" id="progress" hidden>
+          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-text" id="progress-text"></div>
+        </div>
+        <div class="error" id="launch-error" hidden></div>
+      </div>
+      <div class="news">
+        <h2>News</h2>
+        <div class="news-grid" id="news"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-servers">
+      <div class="page-head">
+        <h1>Servers</h1>
+        <div class="actions">
+          <button class="ghost" id="refresh-servers"><img src="icons/refresh-cw.svg" alt="">Refresh</button>
+          <button class="primary" id="add-server"><img src="icons/plus.svg" alt="">Add server</button>
+        </div>
+      </div>
+      <form class="add-server card" id="add-server-form" hidden>
+        <input id="server-name" placeholder="Name" maxlength="32" required>
+        <input id="server-address" placeholder="Address, e.g. play.example.net" maxlength="128" required>
+        <button class="primary" type="submit">Save</button>
+        <button class="ghost" type="button" id="cancel-server">Cancel</button>
+      </form>
+      <div class="server-grid" id="servers"></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="page-head"><h1>Settings</h1></div>
+      <div class="settings-grid">
+        <div class="card">
+          <h3>Game</h3>
+          <label class="field">
+            <span>Memory <b id="ram-value"></b></span>
+            <input type="range" id="ram" min="1024" step="256">
+          </label>
+          <div class="field row">
+            <label><span>Width</span><input type="number" id="width" min="320" max="7680"></label>
+            <label><span>Height</span><input type="number" id="height" min="240" max="4320"></label>
+          </div>
+          <label class="toggle-row"><span>Start in fullscreen</span><input type="checkbox" id="fullscreen" class="switch"></label>
+        </div>
+
+        <div class="card">
+          <h3>Launcher</h3>
+          <div class="field">
+            <span>After launching</span>
+            <div class="segmented" id="after-launch">
+              <button data-value="keep">Keep open</button>
+              <button data-value="minimize">Minimize</button>
+              <button data-value="close">Close</button>
+            </div>
+          </div>
+          <div class="field">
+            <span>Game folder</span>
+            <div class="path-row"><code id="game-dir"></code><button class="ghost small" id="open-folder"><img src="icons/folder-open.svg" alt="">Open</button></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Java</h3>
+          <label class="field"><span>Java path <i>(empty uses Valor's Java 8)</i></span><input id="java-path" placeholder="Valor's Java 8"></label>
+          <label class="field"><span>Extra JVM arguments</span><input id="jvm-args" placeholder="-XX:+UseStringDeduplication"></label>
+        </div>
+
+        <div class="card" id="accounts-card">
+          <h3>Accounts</h3>
+          <div id="account-list"></div>
+          <button class="primary wide" id="microsoft"><img src="icons/user.svg" alt="">Sign in with Microsoft</button>
+          <label class="field offline" id="offline-field" hidden>
+            <span>Offline name <i>(dev mode: used when no Microsoft account is signed in)</i></span>
+            <input id="offline-name" maxlength="16" placeholder="Player">
+          </label>
+          <div class="error" id="account-error" hidden></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="silk.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

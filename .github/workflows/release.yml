@@ -1,0 +1,57 @@
+name: Release Launcher
+# Publishes a launcher release that installed launchers update to.
+# To release: set "version" in launcher/package.json (e.g. 0.2.0), commit, then push a matching tag: git tag v0.2.0 && git push origin v0.2.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  mod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-java@v4.0.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew build
+      - uses: actions/upload-artifact@v4.3.0
+        with:
+          name: valor-mod
+          path: build/libs/valor-*.jar
+
+  windows:
+    needs: mod
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Check the tag matches the launcher version
+        shell: bash
+        run: |
+          version=$(node -p "require('./launcher/package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME doesn't match launcher/package.json version $version"; exit 1
+          fi
+      - uses: actions/download-artifact@v4.1.4
+        with:
+          name: valor-mod
+          path: mod
+      - name: Bundle the mod with the launcher
+        shell: bash
+        run: mkdir -p launcher/resources && cp mod/valor-*.jar launcher/resources/valor.jar
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: launcher/package-lock.json
+      - name: Build and publish the Windows installer
+        working-directory: launcher
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm ci
+          npx electron-builder --win --publish always

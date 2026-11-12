@@ -1,0 +1,21 @@
+# Mod card icons: module id, then the Lucide icon (lucide.dev) drawn for it. Order = cell in mod-icons.png (8 x 8).
+# After editing, rebuild the atlas: node tools/mod-icons.js <path to lucide-static>
+keystrokes keyboard
+cps mouse-pointer-click
+combo flame
+reach ruler
+armor shield
+potions flask-conical
+togglesprint footprints
+togglesneak chevrons-down
+zoom zoom-in
+hitboxes box
+arrows target
+fps gauge
+ping wifi
+coords map-pin
+direction compass
+clock clock
+memory memory-stick
+server server
+fullbright sun
